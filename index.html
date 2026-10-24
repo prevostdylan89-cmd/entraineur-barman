@@ -1,0 +1,1198 @@
+<!doctype html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="color-scheme" content="light dark">
+<meta name="theme-color" content="#0E241F" media="(prefers-color-scheme: dark)">
+<meta name="theme-color" content="#EEF0EA" media="(prefers-color-scheme: light)">
+<meta name="description" content="Révise tes recettes de cocktails : quiz chronométré, flashcards et révision espacée.">
+<link rel="manifest" href="manifest.json">
+<link rel="icon" type="image/png" href="icon-192.png">
+<link rel="apple-touch-icon" href="icon-192.png">
+<title>Entraîneur barman</title>
+<style>
+:root{
+  --bg:#EEF0EA; --surface:#F8F8F4; --surface-2:#E2E7DE; --ink:#13302A; --ink-2:#4D605A; --ink-3:#7A8A84;
+  --brass:#8C6A1E; --brass-soft:rgba(140,106,30,.14); --on-brass:#FFF8E6;
+  --line:rgba(19,48,42,.14); --line-2:rgba(19,48,42,.26);
+  --ok:#2F7A45; --ok-soft:rgba(47,122,69,.13); --bad:#B3263E; --bad-soft:rgba(179,38,62,.12); --warn:#9A6A12;
+  --shadow:0 1px 0 rgba(19,48,42,.06),0 8px 24px -12px rgba(19,48,42,.28);
+  --serif:"Iowan Old Style","Palatino Linotype",Palatino,"Book Antiqua","URW Palladio L","Noto Serif",Georgia,serif;
+  --sans:system-ui,-apple-system,"Segoe UI",Roboto,"Noto Sans",sans-serif;
+  --r-s:8px; --r-m:14px; --r-l:22px;
+  --tabs-h:64px;
+}
+@media (prefers-color-scheme: dark){
+  :root{
+    --bg:#0E241F; --surface:#15322B; --surface-2:#1C3E35; --ink:#EDE4CF; --ink-2:#B9B29E; --ink-3:#8A8B7C;
+    --brass:#D2A84E; --brass-soft:rgba(210,168,78,.16); --on-brass:#1E1708;
+    --line:rgba(237,228,207,.13); --line-2:rgba(237,228,207,.24);
+    --ok:#86BD92; --ok-soft:rgba(134,189,146,.14); --bad:#E8768A; --bad-soft:rgba(232,118,138,.14); --warn:#E1B25B;
+    --shadow:0 1px 0 rgba(0,0,0,.25),0 10px 30px -14px rgba(0,0,0,.7);
+  }
+}
+*{box-sizing:border-box}
+html,body{margin:0;height:100%}
+body{background:var(--bg);color:var(--ink);font:16px/1.5 var(--sans);-webkit-font-smoothing:antialiased;-webkit-tap-highlight-color:transparent}
+body.locked{overflow:hidden}
+button,input,select,textarea{font:inherit;color:inherit}
+button{cursor:pointer}
+:focus-visible{outline:2px solid var(--brass);outline-offset:2px;border-radius:6px}
+h1,h2,h3{font-family:var(--serif);font-weight:600;letter-spacing:-.01em;margin:0;line-height:1.15}
+p{margin:0}
+.num{font-variant-numeric:tabular-nums}
+
+/* ---------- Structure ---------- */
+.app{min-height:100%;padding:env(safe-area-inset-top) 0 calc(var(--tabs-h) + env(safe-area-inset-bottom))}
+.view{max-width:720px;margin:0 auto;padding:20px 18px 40px}
+.tabs{position:fixed;left:0;right:0;bottom:0;z-index:20;display:flex;justify-content:space-around;
+  background:color-mix(in srgb,var(--surface) 92%,transparent);backdrop-filter:blur(12px);-webkit-backdrop-filter:blur(12px);
+  border-top:1px solid var(--line);padding:6px 6px calc(6px + env(safe-area-inset-bottom))}
+.tab{flex:1;max-width:120px;background:none;border:0;display:flex;flex-direction:column;align-items:center;gap:2px;
+  padding:6px 4px;border-radius:12px;color:var(--ink-3);font-size:12px}
+.tab svg{width:24px;height:24px}
+.tab[aria-current="page"]{color:var(--ink)}
+.tab[aria-current="page"] svg{color:var(--brass)}
+@media (min-width:900px){
+  .app{padding:0 0 0 220px}
+  .tabs{top:0;right:auto;width:220px;flex-direction:column;justify-content:flex-start;gap:4px;border-top:0;border-right:1px solid var(--line);padding:28px 14px}
+  .tabs::before{content:"Entraîneur barman";font-family:var(--serif);font-size:20px;font-weight:600;padding:0 10px 22px}
+  .tab{flex-direction:row;max-width:none;gap:12px;font-size:15px;padding:10px 12px;justify-content:flex-start}
+  .tab[aria-current="page"]{background:var(--brass-soft)}
+  .view{padding:40px 32px 60px}
+}
+
+/* ---------- Éléments ---------- */
+.page-title{font-size:30px;margin:4px 0 18px}
+.section{margin-top:28px}
+.section > h2{font-size:20px;margin-bottom:10px}
+.muted{color:var(--ink-2)}
+.small{font-size:14px}
+.tiny{font-size:12.5px;color:var(--ink-3)}
+.card{background:var(--surface);border:1px solid var(--line);border-radius:var(--r-m);padding:16px}
+.btn{display:inline-flex;align-items:center;justify-content:center;gap:8px;min-height:46px;padding:0 18px;border-radius:999px;
+  border:1px solid var(--line-2);background:var(--surface);font-weight:600;font-size:15px;text-decoration:none}
+.btn:active{transform:translateY(1px)}
+.btn.primary{background:var(--brass);border-color:var(--brass);color:var(--on-brass)}
+.btn.ghost{background:transparent}
+.btn.danger{color:var(--bad);border-color:color-mix(in srgb,var(--bad) 40%,transparent)}
+.btn.block{width:100%}
+.btn[disabled]{opacity:.45;pointer-events:none}
+.btn svg{width:18px;height:18px}
+.icon-btn{width:44px;height:44px;display:inline-grid;place-items:center;border-radius:50%;border:0;background:transparent}
+.icon-btn svg{width:22px;height:22px}
+.icon-btn:hover{background:var(--surface-2)}
+.row{display:flex;gap:10px;align-items:center}
+.row.wrap{flex-wrap:wrap}
+.grow{flex:1}
+.chips{display:flex;gap:8px;overflow-x:auto;padding:2px 2px 6px;margin:0 -2px;scrollbar-width:none}
+.chips::-webkit-scrollbar{display:none}
+.chip{flex:none;border:1px solid var(--line-2);background:transparent;border-radius:999px;padding:7px 14px;font-size:14px;white-space:nowrap}
+.chip[aria-pressed="true"]{background:var(--ink);color:var(--bg);border-color:var(--ink)}
+.seg{display:inline-flex;border:1px solid var(--line-2);border-radius:999px;padding:3px;gap:2px;flex-wrap:wrap}
+.seg button{border:0;background:transparent;border-radius:999px;padding:7px 14px;font-size:14px;min-width:44px}
+.seg button[aria-pressed="true"]{background:var(--brass);color:var(--on-brass);font-weight:600}
+.field{display:flex;flex-direction:column;gap:6px;margin-bottom:14px}
+.field > span{font-size:14px;color:var(--ink-2)}
+input[type=text],input[type=search],input[type=number],input[type=date],select,textarea{
+  width:100%;min-height:44px;padding:10px 12px;border-radius:var(--r-s);border:1px solid var(--line-2);background:var(--surface);outline:none}
+input:focus,select:focus,textarea:focus{border-color:var(--brass)}
+textarea{min-height:84px;resize:vertical}
+.toast{position:fixed;left:50%;bottom:calc(var(--tabs-h) + 18px + env(safe-area-inset-bottom));transform:translate(-50%,20px);opacity:0;
+  background:var(--ink);color:var(--bg);padding:10px 18px;border-radius:999px;font-size:14px;z-index:100;transition:.25s;pointer-events:none;max-width:90vw;text-align:center}
+.toast.show{opacity:1;transform:translate(-50%,0)}
+.empty{text-align:center;padding:30px 16px;color:var(--ink-2)}
+.empty h3{font-size:19px;color:var(--ink);margin-bottom:6px}
+
+/* ---------- Accueil ---------- */
+.service{position:relative;overflow:hidden;border-radius:var(--r-l);padding:22px 20px 20px;background:var(--surface);border:1px solid var(--line)}
+.service .label{font-size:14px;color:var(--ink-2)}
+.service .count{font-family:var(--serif);font-size:44px;line-height:1;margin:8px 0 4px}
+.service .count small{font-family:var(--sans);font-size:15px;color:var(--ink-2);margin-left:6px}
+.service .sub{color:var(--ink-2);font-size:14.5px;margin-bottom:16px}
+.service .ribbon{display:flex;gap:16px;flex-wrap:wrap;margin-top:14px;padding-top:14px;border-top:1px dashed var(--line-2);font-size:14px;color:var(--ink-2)}
+.service .ribbon b{color:var(--ink);font-weight:600}
+.modes{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+.mode{text-align:left;border:1px solid var(--line);background:var(--surface);border-radius:var(--r-m);padding:16px;display:flex;flex-direction:column;gap:6px;min-height:118px}
+.mode svg{width:26px;height:26px;color:var(--brass)}
+.mode b{font-family:var(--serif);font-size:18px;font-weight:600}
+.mode span{font-size:13.5px;color:var(--ink-2)}
+
+/* ---------- Liste recettes ---------- */
+.search{position:relative;margin-bottom:12px}
+.search svg{position:absolute;left:12px;top:50%;transform:translateY(-50%);width:18px;height:18px;color:var(--ink-3)}
+.search input{padding-left:38px;border-radius:999px}
+.list{list-style:none;margin:8px 0 0;padding:0}
+.item{display:flex;align-items:center;gap:12px;padding:12px 4px;border-bottom:1px solid var(--line);cursor:pointer}
+.item:hover{background:color-mix(in srgb,var(--surface-2) 50%,transparent)}
+.item .glass{width:34px;height:34px;flex:none;display:grid;place-items:center;border-radius:10px;background:var(--surface-2);color:var(--ink-2)}
+.item .glass svg{width:22px;height:22px}
+.item .nm{font-family:var(--serif);font-size:18px;font-weight:600;line-height:1.2}
+.item .meta{font-size:13px;color:var(--ink-3)}
+.item .tags{display:flex;gap:4px;align-items:center}
+.dot-tag{font-size:11.5px;padding:2px 7px;border-radius:999px;background:var(--brass-soft);color:var(--ink)}
+.mbar{width:56px;height:5px;border-radius:5px;background:var(--surface-2);overflow:hidden;flex:none}
+.mbar span{display:block;height:100%;background:var(--brass)}
+.mbar.ok span{background:var(--ok)}
+.mbar.bad span{background:var(--bad)}
+.fab{position:fixed;right:18px;bottom:calc(var(--tabs-h) + 16px + env(safe-area-inset-bottom));z-index:15;height:54px;padding:0 20px 0 16px;border-radius:999px;
+  border:0;background:var(--brass);color:var(--on-brass);font-weight:700;display:flex;align-items:center;gap:8px;box-shadow:var(--shadow)}
+.fab svg{width:22px;height:22px}
+@media (min-width:900px){.fab{bottom:28px;right:32px}}
+
+/* ---------- Fiche (spec) ---------- */
+.spec{list-style:none;margin:0;padding:0}
+.ing{padding:7px 0}
+.ing-line{display:flex;align-items:baseline;gap:6px}
+.ing-n{font-size:16px}
+.lead{flex:1;border-bottom:2px dotted var(--line-2);transform:translateY(-4px);min-width:12px}
+.ing-q{font-variant-numeric:tabular-nums;font-weight:600;white-space:nowrap}
+.pour{height:6px;border-radius:6px;background:var(--surface-2);margin-top:5px;overflow:hidden}
+.pour span{display:block;height:100%;background:var(--brass);border-radius:6px;transform-origin:left;animation:pour .55s cubic-bezier(.2,.8,.2,1) both}
+@keyframes pour{from{transform:scaleX(0)}to{transform:scaleX(1)}}
+.ratio{display:flex;justify-content:space-between;align-items:baseline;margin-top:10px;padding-top:10px;border-top:1px solid var(--line);font-size:14px;color:var(--ink-2)}
+.ratio b{font-family:var(--serif);font-size:18px;color:var(--ink);letter-spacing:.04em}
+.facts{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:14px}
+.fact{background:var(--surface-2);border-radius:var(--r-s);padding:10px 12px;display:flex;gap:10px;align-items:flex-start}
+.fact svg{width:22px;height:22px;flex:none;color:var(--brass);margin-top:2px}
+.fact .k{font-size:12.5px;color:var(--ink-2)}
+.fact .v{font-size:14.5px;font-weight:600;line-height:1.3}
+.fact.wide{grid-column:1/-1}
+.note{margin-top:16px;font-family:var(--serif);font-size:16.5px;line-height:1.6;color:var(--ink-2);font-style:italic}
+
+/* ---------- Calques (fiches, sessions) ---------- */
+.layer{position:fixed;inset:0;z-index:50;background:var(--bg);overflow-y:auto;-webkit-overflow-scrolling:touch;
+  padding:env(safe-area-inset-top) 0 env(safe-area-inset-bottom);opacity:0;transform:translateY(16px);transition:opacity .2s,transform .25s}
+.layer.in{opacity:1;transform:none}
+@media (min-width:900px){
+  .layer.sheet{background:rgba(5,15,12,.45);display:flex;justify-content:center;align-items:flex-start;padding:40px 20px}
+  .layer.sheet .sheet-in{background:var(--bg);width:100%;max-width:640px;border-radius:var(--r-l);box-shadow:var(--shadow);border:1px solid var(--line)}
+}
+.sheet-head{position:sticky;top:0;z-index:2;display:flex;align-items:center;gap:6px;padding:8px 10px;background:color-mix(in srgb,var(--bg) 92%,transparent);backdrop-filter:blur(10px);-webkit-backdrop-filter:blur(10px)}
+.sheet-head .t{flex:1;font-weight:600;font-size:15px;text-align:center;color:var(--ink-2)}
+.sheet-body{padding:6px 20px 32px;max-width:640px;margin:0 auto}
+.detail-name{font-size:34px;margin:4px 0 6px}
+.detail-sub{color:var(--ink-2);font-size:14.5px;margin-bottom:18px}
+.actions{display:flex;gap:10px;flex-wrap:wrap;margin-top:22px}
+.toggle-row{display:flex;gap:10px;margin:14px 0 4px}
+.toggle-row .btn{flex:1;min-height:42px;font-size:14px}
+.btn[aria-pressed="true"]{background:var(--brass-soft);border-color:var(--brass)}
+.progress-line{display:flex;align-items:center;gap:10px;margin-top:6px;font-size:14px;color:var(--ink-2)}
+.progress-line .mbar{width:90px}
+
+/* Formulaire ingrédients */
+.ing-edit{display:grid;grid-template-columns:1fr 78px 118px 40px;gap:6px;margin-bottom:8px;align-items:center}
+.ing-edit input,.ing-edit select{min-height:42px;padding:8px}
+@media (max-width:420px){.ing-edit{grid-template-columns:1fr 64px 96px 36px}}
+
+/* ---------- Session ---------- */
+.ses{min-height:100%;display:flex;flex-direction:column;max-width:640px;margin:0 auto;padding:0 18px 20px}
+.ses-top{display:flex;align-items:center;gap:8px;padding:8px 0}
+.ses-top .count{flex:1;text-align:center;font-size:14px;color:var(--ink-2)}
+.timer{height:5px;border-radius:5px;background:var(--surface-2);overflow:hidden;margin-bottom:6px}
+.timer span{display:block;height:100%;width:100%;background:var(--brass);transform-origin:left}
+.timer.low span{background:var(--bad)}
+.timer.off{visibility:hidden}
+.ses-body{flex:1;display:flex;flex-direction:column;padding-top:18px}
+.ses-kind{font-size:14px;color:var(--brass);font-weight:600}
+.ses-name{font-size:36px;margin:6px 0 4px}
+.ses-prompt{font-size:17px;color:var(--ink-2);margin-bottom:20px}
+.opts{display:flex;flex-direction:column;gap:10px}
+.opt{text-align:left;border:1px solid var(--line-2);background:var(--surface);border-radius:var(--r-m);padding:14px 16px;font-size:16px;display:flex;gap:12px;align-items:flex-start;min-height:54px}
+.opt .k{flex:none;width:24px;height:24px;border-radius:50%;border:1px solid var(--line-2);display:grid;place-items:center;font-size:12px;color:var(--ink-3);margin-top:1px}
+.opt .spec-lines{display:flex;flex-direction:column;gap:2px;font-size:15px}
+.opt.right{border-color:var(--ok);background:var(--ok-soft)}
+.opt.wrong{border-color:var(--bad);background:var(--bad-soft)}
+.opt.dim{opacity:.55}
+.flipcard{border:1px solid var(--line);background:var(--surface);border-radius:var(--r-l);padding:20px;min-height:220px;display:flex;flex-direction:column;justify-content:center;box-shadow:var(--shadow)}
+.flipcard.front{align-items:center;text-align:center;gap:10px;cursor:pointer}
+.flipcard.front svg{width:56px;height:56px;color:var(--brass)}
+.flipcard .hint{color:var(--ink-3);font-size:14px}
+.flipcard.back{animation:flip .35s ease both}
+@keyframes flip{from{transform:perspective(900px) rotateY(-80deg);opacity:0}to{transform:none;opacity:1}}
+.answer-big{font-family:var(--serif);font-size:26px;margin-bottom:12px}
+.ses-foot{padding-top:18px;display:flex;flex-direction:column;gap:10px}
+.grades{display:grid;grid-template-columns:repeat(3,1fr);gap:8px}
+.grades .btn{border-radius:var(--r-m);flex-direction:column;gap:0;min-height:58px;font-size:15px}
+.grades .btn small{font-weight:400;font-size:12px;opacity:.8}
+.g0{color:var(--bad);border-color:color-mix(in srgb,var(--bad) 45%,transparent)!important}
+.g1{color:var(--warn);border-color:color-mix(in srgb,var(--warn) 45%,transparent)!important}
+.g2{color:var(--ok);border-color:color-mix(in srgb,var(--ok) 45%,transparent)!important}
+.verdict{font-weight:700;margin:16px 0 8px}
+.verdict.ok{color:var(--ok)} .verdict.ko{color:var(--bad)}
+.kbd{font-size:12px;color:var(--ink-3);text-align:center}
+@media (pointer:coarse){.kbd{display:none}}
+
+/* ---------- Progression ---------- */
+.glass-meter{display:flex;gap:18px;align-items:center}
+.glass-meter svg{width:130px;height:auto;flex:none}
+.glass-meter .big{font-family:var(--serif);font-size:44px;line-height:1}
+.stats{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin-top:16px}
+.stat{background:var(--surface-2);border-radius:var(--r-s);padding:10px 12px}
+.stat b{display:block;font-family:var(--serif);font-size:24px;line-height:1.1}
+.stat span{font-size:12.5px;color:var(--ink-2)}
+.days{display:grid;grid-template-columns:repeat(14,1fr);gap:4px;margin-top:10px}
+.days i{aspect-ratio:1;border-radius:4px;background:var(--surface-2)}
+.days i.on{background:var(--brass)}
+.days i.today{outline:1px solid var(--ink-2);outline-offset:1px}
+.settings-group{background:var(--surface);border:1px solid var(--line);border-radius:var(--r-m);overflow:hidden}
+.set-row{padding:14px 16px;border-bottom:1px solid var(--line);display:flex;flex-direction:column;gap:10px}
+.set-row:last-child{border-bottom:0}
+.set-row .lbl{font-weight:600}
+.set-row .desc{font-size:13.5px;color:var(--ink-2)}
+.limits{font-size:14.5px;color:var(--ink-2);padding-left:18px;margin:8px 0 0}
+.limits li{margin-bottom:6px}
+.sr{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0)}
+@media (prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}}
+</style>
+</head>
+<body>
+<div class="app">
+  <main class="view" id="view" tabindex="-1"></main>
+  <nav class="tabs" aria-label="Navigation principale">
+    <button class="tab" data-a="tab" data-tab="reviser"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M5 4h14l-7 8z"/><path d="M12 12v8M8 20h8"/></svg>Réviser</button>
+    <button class="tab" data-a="tab" data-tab="recettes"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M5 4h11a3 3 0 0 1 3 3v13H8a3 3 0 0 1-3-3z"/><path d="M5 17a3 3 0 0 1 3-3h11M9 8h6"/></svg>Recettes</button>
+    <button class="tab" data-a="tab" data-tab="progres"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M4 20V10M10 20V4M16 20v-7M22 20H2"/></svg>Progrès</button>
+    <button class="tab" data-a="tab" data-tab="reglages"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.7 1.7 0 0 0 .3 1.8l.1.1a2 2 0 1 1-2.8 2.8l-.1-.1a1.7 1.7 0 0 0-1.8-.3 1.7 1.7 0 0 0-1 1.5V21a2 2 0 1 1-4 0v-.1a1.7 1.7 0 0 0-1.1-1.5 1.7 1.7 0 0 0-1.8.3l-.1.1a2 2 0 1 1-2.8-2.8l.1-.1a1.7 1.7 0 0 0 .3-1.8 1.7 1.7 0 0 0-1.5-1H3a2 2 0 1 1 0-4h.1a1.7 1.7 0 0 0 1.5-1.1 1.7 1.7 0 0 0-.3-1.8l-.1-.1a2 2 0 1 1 2.8-2.8l.1.1a1.7 1.7 0 0 0 1.8.3H9a1.7 1.7 0 0 0 1-1.5V3a2 2 0 1 1 4 0v.1a1.7 1.7 0 0 0 1 1.5 1.7 1.7 0 0 0 1.8-.3l.1-.1a2 2 0 1 1 2.8 2.8l-.1.1a1.7 1.7 0 0 0-.3 1.8V9a1.7 1.7 0 0 0 1.5 1H21a2 2 0 1 1 0 4h-.1a1.7 1.7 0 0 0-1.5 1z"/></svg>Réglages</button>
+  </nav>
+</div>
+<div class="toast" id="toast" role="status" aria-live="polite"></div>
+<input type="file" id="importFile" accept="application/json,.json" hidden>
+
+<script>
+'use strict';
+/* =========================================================
+   1. Référentiels
+   ========================================================= */
+const APP_VERSION = '1.0.0';
+const KEY = 'entraineur-barman-v1';
+const DAY = 864e5;
+
+const CATS = {I:'IBA · Inoubliables', C:'IBA · Classiques contemporains', N:'IBA · Nouvelle ère', E:'Spec de l’école', P:'Recette perso'};
+const FAMILIES = ['Sour','Spirit-forward','Highball','Fizz & Collins','Tiki & tropical','Pétillant & vin','Crémeux & flip','Julep & smash','Duo & trio','Épicé & savoureux','Chaud'];
+const GLASSES = ['Verre à cocktail','Coupe','Old fashioned','Highball','Flûte','Verre à vin','Mug en cuivre','Verre à Irish coffee','Timbale à julep','Verre hurricane','Verre à margarita','Tumbler'];
+const T = {SH:'Shaker', VM:'Verre à mélange', CO:'Construit au verre', PI:'Pilé puis construit', BL:'Blender', DS:'Dry shake puis shaker', SA:'Shaker puis allongé', RO:'Roulé (throwing)'};
+const TECHS = Object.values(T);
+const G = {N:'Sans glace (verre rafraîchi)', GL:'Glaçons', PI:'Glace pilée', GG:'Gros glaçon', CH:'Servi chaud'};
+const ICES = Object.values(G);
+/* Unités hors liquides. q = 0 → le libellé s’affiche seul. */
+const UNITS = ['trait','goutte','cuillère à bar','cuil. à café','pincée','cube','brin','feuille','tranche','pièce','complément','un trait','quelques gouttes'];
+const PLURAL = {'trait':'traits','goutte':'gouttes','cuillère à bar':'cuillères à bar','pincée':'pincées','cube':'cubes','brin':'brins','feuille':'feuilles','tranche':'tranches','pièce':'pièces'};
+const QTYPES = {spec:'Recette complète', dose:'Doses', verre:'Verre', technique:'Technique', garniture:'Garniture'};
+
+/* =========================================================
+   2. Recettes IBA (doses en ml, comme sur le site IBA)
+   ========================================================= */
+const R = (id,name,cat,fam,glass,tech,ice,garnish,ing,note,ess) => ({id:'iba-'+id,name,cat,fam,glass,tech,ice,garnish,
+  ing:ing.map(([n,q,u])=>({n,q,u:u||'ml'})),note,essential:!!ess});
+const SEED = [
+R('negroni','Negroni','I','Spirit-forward','Old fashioned',T.CO,G.GL,'Demi-tranche d’orange',[['Gin',30],['Campari',30],['Vermouth rouge',30]],'Florence, vers 1919 : le comte Camillo Negroni aurait demandé qu’on remplace le soda de son Americano par du gin.',1),
+R('old-fashioned','Old Fashioned','I','Spirit-forward','Old fashioned',T.CO,G.GL,'Zeste d’orange et cerise',[['Bourbon ou rye',45],['Sucre',1,'cube'],['Angostura',2,'trait'],['Eau plate',2,'trait']],'L’un des plus anciens cocktails : à la fin du XIXe siècle, on commandait son whisky cocktail « à l’ancienne », sans les liqueurs à la mode.',1),
+R('daiquiri','Daiquiri','C','Sour','Verre à cocktail',T.SH,G.N,'Aucune',[['Rhum blanc',60],['Jus de citron vert',20],['Sirop de sucre',10]],'Né à Cuba vers 1900, du nom d’une plage et d’une mine près de Santiago. Le Floridita de La Havane l’a rendu célèbre.',1),
+R('margarita','Margarita','C','Sour','Verre à margarita',T.SH,G.N,'Demi-rebord de sel',[['Tequila',50],['Triple sec',20],['Jus de citron vert',15]],'Origine disputée entre plusieurs bars mexicains et américains des années 1930-1940. Le demi-rebord de sel laisse le choix au client.',1),
+R('mojito','Mojito','C','Julep & smash','Highball',T.PI,G.PI,'Brin de menthe et tranche de citron vert',[['Rhum blanc',45],['Jus de citron vert',20],['Menthe',6,'brin'],['Sucre blanc de canne',2,'cuil. à café'],['Eau gazeuse',0,'complément']],'Héritier du « Draque » cubain. On presse la menthe doucement pour libérer l’arôme sans l’amertume des feuilles broyées.',1),
+R('dry-martini','Dry Martini','I','Spirit-forward','Verre à cocktail',T.VM,G.N,'Zeste de citron ou olive',[['Gin',60],['Vermouth dry',10]],'Descendant du Martinez, il est devenu de plus en plus sec au fil du XXe siècle.',1),
+R('manhattan','Manhattan','I','Spirit-forward','Verre à cocktail',T.VM,G.N,'Cerise au marasquin',[['Rye whiskey',50],['Vermouth rouge',20],['Angostura',1,'trait']],'New York, années 1870-1880. La légende le place au Manhattan Club.',1),
+R('whiskey-sour','Whiskey Sour','I','Sour','Old fashioned',T.SH,G.GL,'Demi-tranche d’orange et cerise',[['Bourbon',45],['Jus de citron jaune',25],['Sirop de sucre',20],['Blanc d’œuf (facultatif)',20]],'Le sour type : alcool, acide, sucre. Imprimé dès 1862 dans le guide de Jerry Thomas.',1),
+R('moscow-mule','Moscow Mule','C','Highball','Mug en cuivre',T.CO,G.GL,'Tranche de citron vert',[['Vodka',45],['Ginger beer',120],['Jus de citron vert',10]],'Los Angeles, 1941 : un coup marketing pour vendre de la vodka et de la ginger beer. Le mug en cuivre fait partie de l’histoire.',1),
+R('spritz','Spritz','N','Pétillant & vin','Verre à vin',T.CO,G.GL,'Tranche d’orange',[['Prosecco',90],['Aperol',60],['Eau gazeuse',0,'un trait']],'Vénétie : les soldats autrichiens allongeaient le vin local avec de l’eau gazeuse. Repère : 3 - 2 - 1.',1),
+R('cosmopolitan','Cosmopolitan','C','Sour','Verre à cocktail',T.SH,G.N,'Zeste de citron',[['Vodka citron',40],['Cointreau',15],['Jus de citron vert',15],['Jus de canneberge',30]],'Star des années 1990, popularisé par la série Sex and the City.',1),
+R('espresso-martini','Espresso Martini','N','Duo & trio','Verre à cocktail',T.SH,G.N,'3 grains de café',[['Vodka',50],['Liqueur de café',30],['Sirop de sucre',10],['Espresso serré',30]],'Créé par Dick Bradsell à Londres dans les années 1980. On secoue fort pour obtenir la mousse.',1),
+R('caipirinha','Caipirinha','C','Sour','Old fashioned',T.PI,G.PI,'Aucune',[['Cachaça',60],['Citron vert (4 quartiers)',0.5,'pièce'],['Sucre blanc de canne',4,'cuil. à café']],'Cocktail national du Brésil. On pile le citron vert avec le sucre directement dans le verre.',1),
+R('cuba-libre','Cuba Libre','C','Highball','Highball',T.CO,G.GL,'Quartier de citron vert',[['Rhum blanc',50],['Cola',120],['Jus de citron vert',10]],'La Havane, vers 1900, après la guerre hispano-américaine : « Por Cuba libre ! »',1),
+R('mai-tai','Mai Tai','C','Tiki & tropical','Old fashioned',T.SH,G.PI,'Brin de menthe et ananas',[['Rhum ambré jamaïcain',30],['Rhum de Martinique',30],['Curaçao orange',15],['Sirop d’orgeat',15],['Jus de citron vert',30],['Sirop de sucre',7.5]],'Trader Vic, Oakland, 1944. « Maita’i » veut dire « excellent » en tahitien.',1),
+R('pina-colada','Piña Colada','C','Tiki & tropical','Verre hurricane',T.BL,G.PI,'Quartier d’ananas et cerise',[['Rhum blanc',50],['Crème de coco',30],['Jus d’ananas',50]],'Porto Rico, années 1950. C’est la boisson officielle de l’île depuis 1978.',1),
+R('bloody-mary','Bloody Mary','C','Épicé & savoureux','Highball',T.RO,G.GL,'Branche de céleri et quartier de citron',[['Vodka',45],['Jus de tomate',90],['Jus de citron jaune',15],['Sauce Worcestershire',2,'trait'],['Tabasco',2,'goutte'],['Sel de céleri et poivre',1,'pincée']],'Attribué à Fernand Petiot, au Harry’s New York Bar de Paris, dans les années 1920.',1),
+R('sidecar','Sidecar','I','Sour','Verre à cocktail',T.SH,G.N,'Aucune (rebord sucré en option)',[['Cognac',50],['Triple sec',20],['Jus de citron jaune',20]],'Paris ou Londres, autour de la fin de la Première Guerre mondiale. Cousin direct du Brandy Crusta.',1),
+R('french-75','French 75','C','Pétillant & vin','Flûte',T.SA,G.N,'Zeste de citron (facultatif)',[['Gin',30],['Jus de citron jaune',15],['Sirop de sucre',15],['Champagne',60]],'Nommé d’après le canon de 75 mm français de la Grande Guerre, pour son effet « coup de canon ».',1),
+R('americano','Americano','I','Highball','Old fashioned',T.CO,G.GL,'Demi-tranche d’orange et zeste de citron',[['Campari',30],['Vermouth rouge',30],['Eau gazeuse',0,'un trait']],'Ancêtre du Negroni. Son nom viendrait des touristes américains qui l’adoraient en Italie.',1),
+R('boulevardier','Boulevardier','I','Spirit-forward','Verre à cocktail',T.VM,G.N,'Zeste d’orange',[['Bourbon ou rye',45],['Campari',30],['Vermouth rouge',30]],'Paris, années 1920 : créé pour Erskine Gwynne, éditeur du magazine « The Boulevardier ». Le Negroni au whisky.',1),
+R('john-collins','John Collins','I','Fizz & Collins','Highball',T.CO,G.GL,'Tranche de citron et cerise',[['Gin',45],['Jus de citron jaune',30],['Sirop de sucre',15],['Eau gazeuse',60]],'Londres, XIXe siècle. Le Collins est un sour allongé au soda, servi long sur glace.',1),
+R('gin-fizz','Gin Fizz','I','Fizz & Collins','Highball',T.SA,G.GL,'Tranche de citron',[['Gin',45],['Jus de citron jaune',30],['Sirop de sucre',10],['Eau gazeuse',80]],'Le fizz est secoué puis allongé au soda : plus court et plus vif que le Collins.',1),
+R('aviation','Aviation','I','Sour','Verre à cocktail',T.SH,G.N,'Cerise au marasquin (facultatif)',[['Gin',45],['Marasquin',15],['Jus de citron jaune',15],['Crème de violette',1,'cuillère à bar']],'Hugo Ensslin, New York, 1916. La violette lui donne sa teinte de ciel.',1),
+R('last-word','Last Word','I','Sour','Verre à cocktail',T.SH,G.N,'Aucune',[['Gin',22.5],['Chartreuse verte',22.5],['Marasquin',22.5],['Jus de citron vert',22.5]],'Detroit Athletic Club, pendant la Prohibition. Redécouvert à Seattle au début des années 2000. Quatre parts égales.',1),
+R('paloma','Paloma','N','Highball','Highball',T.CO,G.GL,'Tranche de citron vert',[['Tequila',50],['Jus de citron vert',5],['Sel',1,'pincée'],['Soda pamplemousse rose',100]],'Très populaire au Mexique, souvent plus que la Margarita.',1),
+R('tommys-margarita','Tommy’s Margarita','N','Sour','Old fashioned',T.SH,G.GL,'Quartier de citron vert',[['Tequila 100 % agave',60],['Jus de citron vert',30],['Sirop d’agave',15]],'Julio Bermejo, Tommy’s Mexican Restaurant, San Francisco, années 1990. L’agave remplace le triple sec.',1),
+R('penicillin','Penicillin','N','Sour','Old fashioned',T.SH,G.GL,'Gingembre confit',[['Blended scotch',60],['Jus de citron jaune',22.5],['Sirop de miel',22.5],['Gingembre frais',3,'tranche'],['Whisky tourbé d’Islay (en float)',7.5]],'Sam Ross, Milk & Honey, New York, 2005. Le gingembre est pilé dans le shaker, le whisky tourbé versé en surface.',1),
+R('mint-julep','Mint Julep','C','Julep & smash','Timbale à julep',T.PI,G.PI,'Brin de menthe',[['Bourbon',60],['Menthe',4,'brin'],['Sucre',1,'cube'],['Eau plate',2,'cuil. à café']],'Boisson officielle du Kentucky Derby depuis près d’un siècle.',1),
+R('pisco-sour','Pisco Sour','C','Sour','Coupe',T.DS,G.N,'Gouttes d’Angostura ou d’amargo sur la mousse',[['Pisco',60],['Jus de citron jaune',30],['Sirop de sucre',20],['Blanc d’œuf',1,'pièce']],'Lima, années 1920. Le Pérou et le Chili se disputent le pisco.',1),
+R('clover-club','Clover Club','I','Sour','Verre à cocktail',T.DS,G.N,'Framboises',[['Gin',45],['Sirop de framboise',15],['Jus de citron jaune',15],['Blanc d’œuf',0,'quelques gouttes']],'Du nom d’un club de Philadelphie, avant la Prohibition.',1),
+R('white-lady','White Lady','I','Sour','Verre à cocktail',T.SH,G.N,'Aucune',[['Gin',40],['Triple sec',30],['Jus de citron jaune',20]],'Harry MacElhone en a fait une version au gin, popularisée à l’American Bar du Savoy.'),
+R('bellini','Bellini','C','Pétillant & vin','Flûte',T.CO,G.N,'Aucune',[['Prosecco',100],['Purée de pêche blanche',50]],'Giuseppe Cipriani, Harry’s Bar de Venise, 1948. Nommé d’après le peintre Giovanni Bellini.'),
+R('mimosa','Mimosa','C','Pétillant & vin','Flûte',T.CO,G.N,'Zeste d’orange (facultatif)',[['Champagne',75],['Jus d’orange',75]],'Paris, années 1920. Le classique des brunchs.'),
+R('kir','Kir','C','Pétillant & vin','Verre à vin',T.CO,G.N,'Aucune',[['Vin blanc sec (bourgogne aligoté)',90],['Crème de cassis',10]],'Du nom du chanoine Félix Kir, maire de Dijon, qui le servait aux réceptions. Au champagne, c’est un Kir royal.'),
+R('black-russian','Black Russian','C','Duo & trio','Old fashioned',T.CO,G.GL,'Aucune',[['Vodka',50],['Liqueur de café',20]],'Gustave Tops, Bruxelles, 1949. Avec de la crème en surface, il devient le White Russian.'),
+R('irish-coffee','Irish Coffee','C','Chaud','Verre à Irish coffee',T.CO,G.CH,'Aucune',[['Irish whiskey',50],['Café chaud',120],['Sucre roux',1,'cuil. à café'],['Crème légèrement fouettée (en float)',50]],'Joe Sheridan, Foynes (Irlande), années 1940, pour réchauffer des passagers transatlantiques.'),
+R('long-island','Long Island Iced Tea','C','Highball','Highball',T.CO,G.GL,'Tranche de citron',[['Vodka',15],['Tequila',15],['Rhum blanc',15],['Gin',15],['Cointreau',15],['Jus de citron jaune',25],['Sirop de sucre',30],['Cola',0,'un trait']],'Pas une goutte de thé : c’est le cola qui lui donne sa couleur.'),
+R('tequila-sunrise','Tequila Sunrise','C','Highball','Highball',T.CO,G.GL,'Demi-tranche d’orange ou cerise',[['Tequila',45],['Jus d’orange',90],['Grenadine',15]],'On verse la grenadine en dernier : elle tombe au fond et dessine le lever de soleil.'),
+R('sex-on-the-beach','Sex on the Beach','C','Highball','Highball',T.CO,G.GL,'Demi-tranche d’orange',[['Vodka',40],['Liqueur de pêche',20],['Jus d’orange',40],['Jus de canneberge',40]],'Star des années 1980.'),
+R('sea-breeze','Sea Breeze','C','Highball','Highball',T.CO,G.GL,'Quartier de citron vert',[['Vodka',40],['Jus de canneberge',120],['Jus de pamplemousse',30]],'Highball à la canneberge, très en vogue dans les années 1980.'),
+R('dark-n-stormy','Dark ’n’ Stormy','N','Highball','Highball',T.CO,G.GL,'Quartier de citron vert',[['Rhum brun (Gosling’s)',60],['Ginger beer',100]],'Bermudes. Le nom est une marque déposée par Gosling’s.'),
+R('bramble','Bramble','N','Sour','Old fashioned',T.CO,G.PI,'Mûres et tranche de citron',[['Gin',40],['Jus de citron jaune',15],['Sirop de sucre',10],['Crème de mûre',15]],'Dick Bradsell, Londres, 1984. La crème de mûre se verse en filet sur la glace pilée.'),
+R('paper-plane','Paper Plane','N','Sour','Verre à cocktail',T.SH,G.N,'Aucune',[['Bourbon',30],['Amaro Nonino',30],['Aperol',30],['Jus de citron jaune',30]],'Sam Ross, 2008. Quatre parts égales, facile à retenir.'),
+R('corpse-reviver-2','Corpse Reviver #2','N','Sour','Verre à cocktail',T.SH,G.N,'Zeste d’orange',[['Gin',30],['Cointreau',30],['Lillet blanc',30],['Jus de citron jaune',30],['Absinthe',1,'trait']],'Un « réveille-mort » contre la gueule de bois, publié dans le Savoy Cocktail Book en 1930.'),
+R('vesper','Vesper','N','Spirit-forward','Verre à cocktail',T.SH,G.N,'Zeste de citron',[['Gin',45],['Vodka',15],['Lillet blanc',7.5]],'Inventé par Ian Fleming pour James Bond dans Casino Royale (1953).'),
+R('sazerac','Sazerac','I','Spirit-forward','Old fashioned',T.VM,G.N,'Zeste de citron',[['Cognac',50],['Absinthe (rinçage du verre)',10],['Sucre',1,'cube'],['Peychaud’s bitters',2,'trait']],'La Nouvelle-Orléans, XIXe siècle. Le verre est rincé à l’absinthe, puis servi sans glace.'),
+R('vieux-carre','Vieux Carré','I','Spirit-forward','Old fashioned',T.VM,G.GL,'Zeste de citron et cerise',[['Rye whiskey',30],['Cognac',30],['Vermouth rouge',30],['Bénédictine',1,'cuillère à bar'],['Peychaud’s bitters',2,'trait']],'Hotel Monteleone, La Nouvelle-Orléans, 1938. Du nom du quartier français.'),
+R('martinez','Martinez','I','Spirit-forward','Verre à cocktail',T.VM,G.N,'Zeste de citron',[['Gin',45],['Vermouth rouge',45],['Marasquin',1,'cuillère à bar'],['Bitter orange',2,'trait']],'Ancêtre du Martini, fin du XIXe siècle.'),
+R('hanky-panky','Hanky Panky','I','Spirit-forward','Verre à cocktail',T.VM,G.N,'Zeste d’orange',[['Gin',45],['Vermouth rouge',45],['Fernet-Branca',7.5]],'Ada Coleman, cheffe de bar à l’American Bar du Savoy au début du XXe siècle.'),
+R('rusty-nail','Rusty Nail','I','Duo & trio','Old fashioned',T.CO,G.GL,'Zeste de citron',[['Scotch whisky',45],['Drambuie',25]],'Popularisé dans les années 1960.'),
+R('godfather','Godfather','C','Duo & trio','Old fashioned',T.CO,G.GL,'Aucune',[['Scotch whisky',35],['Amaretto',35]],'Années 1970, nommé d’après le film Le Parrain.'),
+R('french-connection','French Connection','C','Duo & trio','Old fashioned',T.CO,G.GL,'Aucune',[['Cognac',35],['Amaretto',35]],'Le frère du Godfather, au cognac.'),
+R('stinger','Stinger','I','Duo & trio','Verre à cocktail',T.VM,G.N,'Aucune',[['Cognac',50],['Crème de menthe blanche',20]],'Digestif new-yorkais du début du XXe siècle.'),
+R('alexander','Alexander','I','Crémeux & flip','Verre à cocktail',T.SH,G.N,'Noix de muscade râpée',[['Cognac',30],['Crème de cacao brune',30],['Crème fraîche liquide',30]],'Cocktail-dessert du début du XXe siècle, parts égales.'),
+R('grasshopper','Grasshopper','C','Crémeux & flip','Verre à cocktail',T.SH,G.N,'Feuille de menthe',[['Crème de menthe verte',20],['Crème de cacao blanche',20],['Crème fraîche liquide',20]],'Associé à Tujague’s, à La Nouvelle-Orléans.'),
+R('golden-dream','Golden Dream','C','Crémeux & flip','Verre à cocktail',T.SH,G.N,'Aucune',[['Galliano',20],['Triple sec',20],['Jus d’orange',20],['Crème fraîche liquide',10]],'Floride, années 1960, à la gloire du Galliano.'),
+R('porto-flip','Porto Flip','I','Crémeux & flip','Verre à cocktail',T.SH,G.N,'Noix de muscade râpée',[['Brandy',15],['Porto rouge',45],['Jaune d’œuf',10]],'Famille des flips : un alcool ou un vin, du sucre et un œuf entier ou son jaune.'),
+R('ramos-gin-fizz','Ramos Gin Fizz','I','Fizz & Collins','Highball',T.SA,G.N,'Aucune',[['Gin',45],['Crème fraîche liquide',60],['Sirop de sucre',30],['Jus de citron vert',15],['Jus de citron jaune',15],['Blanc d’œuf',30],['Eau de fleur d’oranger',3,'trait'],['Extrait de vanille',2,'goutte'],['Eau gazeuse',0,'complément']],'Henry C. Ramos, La Nouvelle-Orléans, 1888. Ses barmen se relayaient pour le secouer très longtemps.'),
+R('singapore-sling','Singapore Sling','C','Tiki & tropical','Highball',T.SH,G.GL,'Ananas et cerise',[['Gin',30],['Liqueur de cerise',15],['Cointreau',7.5],['Bénédictine',7.5],['Grenadine',10],['Jus d’ananas',120],['Jus de citron vert',15],['Angostura',1,'trait']],'Raffles Hotel de Singapour, début du XXe siècle.'),
+R('hemingway-special','Hemingway Special','C','Sour','Verre à cocktail',T.SH,G.N,'Aucune',[['Rhum blanc',60],['Jus de pamplemousse',40],['Marasquin',15],['Jus de citron vert',15]],'Version du Daiquiri préparée pour Hemingway au Floridita, sans sucre ajouté.'),
+R('mary-pickford','Mary Pickford','I','Tiki & tropical','Verre à cocktail',T.SH,G.N,'Cerise au marasquin',[['Rhum blanc',60],['Jus d’ananas',60],['Grenadine',10],['Marasquin',1,'cuillère à bar']],'La Havane, années 1920, nommé d’après l’actrice du cinéma muet.'),
+R('between-the-sheets','Between the Sheets','I','Sour','Verre à cocktail',T.SH,G.N,'Aucune',[['Rhum blanc',30],['Cognac',30],['Triple sec',30],['Jus de citron jaune',20]],'Années 1930, un Sidecar enrichi au rhum.'),
+R('brandy-crusta','Brandy Crusta','I','Sour','Verre à vin',T.SH,G.N,'Rebord sucré et longue écorce de citron',[['Brandy',52.5],['Marasquin',7.5],['Curaçao',7.5],['Jus de citron jaune',15],['Sirop de sucre',1,'cuillère à bar'],['Angostura',2,'trait']],'Joseph Santini, La Nouvelle-Orléans, années 1850. Ancêtre du Sidecar.'),
+R('casino','Casino','I','Sour','Verre à cocktail',T.SH,G.N,'Zeste de citron et cerise',[['Old Tom gin',40],['Marasquin',10],['Bitter orange',10],['Jus de citron jaune',10]],'Classique d’avant la Prohibition.'),
+R('tuxedo','Tuxedo','I','Spirit-forward','Verre à cocktail',T.VM,G.N,'Cerise et zeste de citron',[['Old Tom gin',30],['Vermouth dry',30],['Marasquin',0.5,'cuillère à bar'],['Absinthe',0.25,'cuillère à bar'],['Bitter orange',3,'trait']],'Tuxedo Club, New York, fin du XIXe siècle.'),
+R('monkey-gland','Monkey Gland','I','Sour','Verre à cocktail',T.SH,G.N,'Aucune',[['Gin',50],['Jus d’orange',30],['Absinthe',2,'goutte'],['Grenadine',2,'goutte']],'Harry MacElhone, Paris, années 1920.'),
+R('paradise','Paradise','I','Sour','Verre à cocktail',T.SH,G.N,'Aucune',[['Gin',35],['Liqueur d’abricot',20],['Jus d’orange',15]],'Classique du Savoy Cocktail Book.'),
+R('angel-face','Angel Face','I','Duo & trio','Verre à cocktail',T.SH,G.N,'Aucune',[['Gin',30],['Liqueur d’abricot',30],['Calvados',30]],'Savoy Cocktail Book, 1930. Trois parts égales.'),
+R('champagne-cocktail','Champagne Cocktail','C','Pétillant & vin','Flûte',T.CO,G.N,'Zeste d’orange et cerise',[['Champagne',90],['Cognac',10],['Angostura',2,'trait'],['Sucre',1,'cube']],'XIXe siècle : le cube de sucre imbibé d’Angostura fait monter les bulles.'),
+R('horses-neck','Horse’s Neck','C','Highball','Highball',T.CO,G.GL,'Longue spirale de zeste de citron',[['Cognac',40],['Ginger ale',120],['Angostura (facultatif)',2,'trait']],'Fin du XIXe siècle, d’abord servi sans alcool. La longue spirale de zeste évoque le cou du cheval.'),
+R('lemon-drop','Lemon Drop Martini','C','Sour','Verre à cocktail',T.SH,G.N,'Rebord sucré et tranche de citron',[['Vodka citron',25],['Triple sec',20],['Jus de citron jaune',15]],'San Francisco, années 1970.'),
+R('russian-spring-punch','Russian Spring Punch','C','Pétillant & vin','Highball',T.SA,G.GL,'Tranche de citron et mûre',[['Vodka',25],['Jus de citron jaune',25],['Crème de cassis',15],['Sirop de sucre',10],['Champagne',0,'complément']],'Dick Bradsell, Londres, années 1980.'),
+R('southside','Southside','N','Julep & smash','Verre à cocktail',T.SH,G.N,'Brin de menthe',[['Gin',60],['Jus de citron vert',30],['Sirop de sucre',15],['Menthe',2,'brin']],'Associé aux country clubs de Long Island et aux années de la Prohibition.'),
+R('fernandito','Fernandito','N','Highball','Highball',T.CO,G.GL,'Aucune',[['Fernet-Branca',50],['Cola',0,'complément']],'Le « Fernet con coca », passion nationale en Argentine.')
+];
+SEED.forEach((s,i)=>{s.rank=i});
+
+/* =========================================================
+   3. Stockage
+   ========================================================= */
+const DEFAULT_SETTINGS = {unit:'cl', timer:20, len:10, newPerDay:5, format:'mix', types:['spec','dose','verre','technique','garniture'], schoolStart:'2026-11-09', schoolEnd:'2026-12-04', updatedAt:0};
+const fromSeed = s => ({...JSON.parse(JSON.stringify(s)), fav:false, week:false, custom:false, edited:false, deleted:false, updatedAt:0});
+let S = load();
+
+function load(){
+  let d = {};
+  try{ const raw = localStorage.getItem(KEY); if(raw) d = JSON.parse(raw) || {}; }catch(e){ d = {}; }
+  return migrate(d);
+}
+function migrate(d){
+  d.v = 1;
+  d.cocktails = Array.isArray(d.cocktails) ? d.cocktails : [];
+  d.progress = d.progress && typeof d.progress==='object' ? d.progress : {};
+  d.days = Array.isArray(d.days) ? d.days : [];
+  d.settings = Object.assign({}, DEFAULT_SETTINGS, d.settings||{});
+  d.sel = d.sel || {k:'tous'};
+  d.newDay = d.newDay || {d:'', n:0};
+  const ids = new Set(d.cocktails.map(c=>c.id));
+  SEED.forEach(s=>{ if(!ids.has(s.id)) d.cocktails.push(fromSeed(s)); });
+  return d;
+}
+function save(){
+  try{ localStorage.setItem(KEY, JSON.stringify(S)); }
+  catch(e){ toast('Enregistrement impossible : stockage du navigateur plein'); }
+}
+
+/* =========================================================
+   4. Utilitaires
+   ========================================================= */
+const $ = (s,r=document)=>r.querySelector(s);
+const esc = s => String(s ?? '').replace(/[&<>"']/g, c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+const shuffle = a => { a=[...a]; for(let i=a.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[a[i],a[j]]=[a[j],a[i]];} return a; };
+const pick = a => a[Math.floor(Math.random()*a.length)];
+const uid = () => 'c-'+Date.now().toString(36)+Math.random().toString(36).slice(2,7);
+const today0 = () => { const d=new Date(); d.setHours(0,0,0,0); return d.getTime(); };
+const dkey = (t=Date.now()) => { const d=new Date(t); return d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0'); };
+const plural = (n,s,p) => n+' '+(n>1?(p||s+'s'):s);
+function dec(n,max=2){ const r=Math.round(n*10**max)/10**max; return String(r).replace('.',','); }
+function frac(q){ const m={0.25:'¼',0.5:'½',0.75:'¾'}; if(m[q]) return m[q]; const w=Math.floor(q), f=Math.round((q-w)*100)/100; if(w && m[f]) return w+m[f]; return dec(q); }
+
+let toastT;
+function toast(msg){ const t=$('#toast'); t.textContent=msg; t.classList.add('show'); clearTimeout(toastT); toastT=setTimeout(()=>t.classList.remove('show'),2600); }
+
+/* Doses */
+function fmtMl(q, unit=S.settings.unit){
+  if(unit==='ml') return dec(q,1)+' ml';
+  if(unit==='oz'){
+    const v=q/30, w=Math.floor(v+1e-9), f=v-w;
+    const F=[[0,''],[1/4,'¼'],[1/3,'⅓'],[1/2,'½'],[2/3,'⅔'],[3/4,'¾'],[1,'']];
+    let best=null; F.forEach(([x,s])=>{ if(Math.abs(f-x)<0.035) best=[x,s]; });
+    if(best){ const whole = best[0]===1 ? w+1 : w; const txt=(whole? whole:'')+best[1]; return (txt||'0')+' oz'; }
+    return dec(v)+' oz';
+  }
+  return dec(q/10)+' cl';
+}
+function fmtQ(i){
+  if(i.u==='ml') return fmtMl(i.q);
+  if(!i.q) return i.u;
+  return frac(i.q)+' '+(i.q>1 && PLURAL[i.u] ? PLURAL[i.u] : i.u);
+}
+function toMl(v, unit=S.settings.unit){ const x=parseFloat(String(v).replace(',','.')); if(!isFinite(x)) return 0; const ml = unit==='cl'? x*10 : unit==='oz'? x*30 : x; return Math.round(ml*2)/2; }
+function fromMl(q, unit=S.settings.unit){ if(!q) return ''; const v = unit==='cl'? q/10 : unit==='oz'? q/30 : q; return String(Math.round(v*100)/100).replace('.',','); }
+function ratioStr(c){
+  const v=c.ing.filter(i=>i.u==='ml'&&i.q>0).map(i=>i.q);
+  if(v.length<2 || v.length>5) return '';
+  const min=Math.min(...v);
+  for(let k=1;k<=4;k++){
+    const parts=v.map(x=>x/min*k);
+    if(parts.every(p=>Math.abs(p-Math.round(p))<0.02) && Math.max(...parts)<=12) return parts.map(p=>Math.round(p)).join(' : ');
+  }
+  return '';
+}
+
+/* =========================================================
+   5. Pictogrammes
+   ========================================================= */
+const GLASS_PATHS = {
+  martini:'<path d="M4 4h16l-8 9z"/><path d="M12 13v7M8 20h8"/>',
+  coupe:'<path d="M4 5c0 4 3.6 6.5 8 6.5S20 9 20 5z"/><path d="M12 11.5V20M8 20h8"/>',
+  rocks:'<path d="M5 7h14l-1.4 13H6.4z"/><path d="M5.6 12h12.8"/>',
+  highball:'<path d="M7 3h10l-1.2 18H8.2z"/><path d="M7.5 9h9"/>',
+  flute:'<path d="M9 2h6l-.6 9.5a2.4 2.4 0 0 1-4.8 0z"/><path d="M12 14v7M9 21h6"/>',
+  wine:'<path d="M7 3h10c0 5-2.2 8.5-5 8.5S7 8 7 3z"/><path d="M12 11.5V20M8 20h8"/>',
+  mug:'<path d="M5 6h11v14H5z"/><path d="M16 9h2.5a1.5 1.5 0 0 1 1.5 1.5v4a1.5 1.5 0 0 1-1.5 1.5H16"/>',
+  irish:'<path d="M7 3h10l-1.2 10H8.2z"/><path d="M12 13v6M8 20h8M7.4 6.5h9.2"/>',
+  julep:'<path d="M6 5h12l-1 15H7z"/><path d="M9 9h.01M12 11h.01M15 9h.01M10 14h.01M14 15h.01"/>',
+  hurricane:'<path d="M8 2h8c0 3.5-2.6 4.5-2.6 8.5S16 15 16 17.5H8C8 15 10.6 14.5 10.6 10.5S8 5.5 8 2z"/><path d="M12 17.5V21M9 21h6"/>',
+  margarita:'<path d="M3 5h18c0 2.5-3 3.5-5.5 3.8L13 10.5c-.8 2-.8 3.5-.8 3.5"/><path d="M3 5c0 2.5 3 3.5 5.5 3.8L11 10.5c.8 2 .8 3.5.8 3.5M12 14v6M8 20h8"/>'
+};
+function glassKey(g){
+  const s=(g||'').toLowerCase();
+  if(s.includes('margarita')) return 'margarita';
+  if(s.includes('coupe')) return 'coupe';
+  if(s.includes('cocktail')||s.includes('martini')) return 'martini';
+  if(s.includes('highball')||s.includes('collins')) return 'highball';
+  if(s.includes('flûte')||s.includes('flute')) return 'flute';
+  if(s.includes('vin')||s.includes('ballon')) return 'wine';
+  if(s.includes('cuivre')||s.includes('mug')) return 'mug';
+  if(s.includes('irish')) return 'irish';
+  if(s.includes('julep')||s.includes('timbale')) return 'julep';
+  if(s.includes('hurricane')||s.includes('poco')) return 'hurricane';
+  return 'rocks';
+}
+const svg = (inner, sw=1.6) => `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="${sw}" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">${inner}</svg>`;
+const glassIcon = g => svg(GLASS_PATHS[glassKey(g)]);
+const I = {
+  x:svg('<path d="M6 6l12 12M18 6L6 18"/>',1.8),
+  back:svg('<path d="M15 5l-7 7 7 7"/>',1.8),
+  star:svg('<path d="M12 3.5l2.6 5.3 5.9.9-4.3 4.1 1 5.8L12 16.8l-5.2 2.8 1-5.8-4.3-4.1 5.9-.9z"/>'),
+  starFill:'<svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M12 3.5l2.6 5.3 5.9.9-4.3 4.1 1 5.8L12 16.8l-5.2 2.8 1-5.8-4.3-4.1 5.9-.9z"/></svg>',
+  plus:svg('<path d="M12 5v14M5 12h14"/>',2),
+  search:svg('<circle cx="11" cy="11" r="7"/><path d="M20 20l-4-4"/>'),
+  shaker:svg('<path d="M8 8h8l-1.2 13H9.2z"/><path d="M9 8V6.5a3 3 0 0 1 6 0V8M10.5 3.5h3"/>'),
+  ice:svg('<rect x="4" y="9" width="8" height="8" rx="1.5"/><rect x="12" y="5" width="8" height="8" rx="1.5"/>'),
+  leaf:svg('<path d="M5 19c0-9 6-14 14-14 0 8-5 14-14 14z"/><path d="M5 19l8-8"/>'),
+  timer:svg('<circle cx="12" cy="13" r="8"/><path d="M12 9v4l2.5 2M9.5 2h5"/>'),
+  cards:svg('<rect x="3" y="6" width="13" height="15" rx="2"/><path d="M8 3h11a2 2 0 0 1 2 2v13"/>'),
+  repeat:svg('<path d="M4 12a8 8 0 0 1 14-5.3L20 9"/><path d="M20 4v5h-5M20 12a8 8 0 0 1-14 5.3L4 15"/><path d="M4 20v-5h5"/>'),
+  edit:svg('<path d="M4 20h4L19 9l-4-4L4 16z"/><path d="M13.5 6.5l4 4"/>'),
+  trash:svg('<path d="M4 7h16M10 11v6M14 11v6M6 7l1 13h10l1-13M9 7V4h6v3"/>'),
+  cal:svg('<rect x="3" y="5" width="18" height="16" rx="2"/><path d="M3 10h18M8 3v4M16 3v4"/>')
+};
+
+/* =========================================================
+   6. Révision espacée
+   ========================================================= */
+const live = () => S.cocktails.filter(c=>!c.deleted).sort((a,b)=>(a.rank??999)-(b.rank??999) || a.name.localeCompare(b.name,'fr'));
+const byId = id => S.cocktails.find(c=>c.id===id);
+const P = id => S.progress[id];
+
+function mastery(id){
+  const p=P(id); if(!p||!p.n) return 0;
+  const h=p.h.slice(-5); const rec=h.reduce((a,g)=>a+g/2,0)/h.length;
+  return Math.round(100*(0.6*rec + 0.4*Math.min(1,p.iv/21)));
+}
+const isNew = id => !P(id) || !P(id).n;
+const isDue = id => { const p=P(id); return !!(p && p.n && p.due<=Date.now()); };
+const toRework = id => { const p=P(id); return !!(p && p.n && (mastery(id)<60 || p.h[p.h.length-1]===0)); };
+
+function grade(id, g){
+  const p = P(id) || {ease:2.5, iv:0, due:0, reps:0, lapses:0, h:[], n:0, ok:0};
+  const first = !p.n;
+  if(g===0){ p.lapses++; p.reps=0; p.iv=0; p.ease=Math.max(1.3,p.ease-.2); p.due=Date.now()+10*60e3; }
+  else if(g===1){ p.ease=Math.max(1.3,p.ease-.15); p.iv=Math.max(1,Math.round(p.iv*1.2)); p.due=today0()+p.iv*DAY; }
+  else { p.reps++; p.iv = p.reps===1?1 : p.reps===2?3 : Math.max(p.iv+1, Math.round(p.iv*p.ease)); p.due=today0()+p.iv*DAY; }
+  p.h.push(g); if(p.h.length>8) p.h.shift();
+  p.n++; p.ok += g===2?1 : g===1?.5 : 0; p.last=Date.now(); p.updatedAt=Date.now();
+  S.progress[id]=p;
+  const k=dkey(); if(!S.days.includes(k)) S.days.push(k);
+  if(first){ if(S.newDay.d!==k) S.newDay={d:k,n:0}; S.newDay.n++; }
+  save();
+}
+function streak(){
+  const set=new Set(S.days); let t=today0(), n=0;
+  if(!set.has(dkey(t))) t-=DAY;
+  while(set.has(dkey(t))){ n++; t-=DAY; }
+  return n;
+}
+function newLeft(){ const used = S.newDay.d===dkey() ? S.newDay.n : 0; return Math.max(0, S.settings.newPerDay - used); }
+function dueLabel(id){
+  const p=P(id); if(!p||!p.n) return 'Jamais révisé';
+  if(p.due<=Date.now()) return 'À réviser maintenant';
+  const d=Math.round((p.due-today0())/DAY);
+  return d<=0 ? 'Plus tard aujourd’hui' : d===1 ? 'Prochaine révision demain' : `Prochaine révision dans ${d} jours`;
+}
+
+/* Sélections */
+const SELS = [['tous','Tous'],['essentiels','Indispensables'],['fav','Favoris'],['semaine','Semaine à l’école'],['rates','À retravailler'],['perso','Mes recettes'],['famille','Une famille']];
+function pool(sel=S.sel){
+  let L=live();
+  switch(sel.k){
+    case 'essentiels': return L.filter(c=>c.essential);
+    case 'fav': return L.filter(c=>c.fav);
+    case 'semaine': return L.filter(c=>c.week);
+    case 'rates': return L.filter(c=>toRework(c.id));
+    case 'perso': return L.filter(c=>c.custom||c.edited);
+    case 'famille': return L.filter(c=>c.fam===sel.fam);
+  }
+  return L;
+}
+const selLabel = () => S.sel.k==='famille' ? 'Famille '+(S.sel.fam||'') : (SELS.find(s=>s[0]===S.sel.k)||SELS[0])[1];
+function reviewQueue(){
+  const L=pool();
+  const due=L.filter(c=>isDue(c.id)).sort((a,b)=>P(a.id).due-P(b.id).due).map(c=>c.id);
+  const nw=L.filter(c=>isNew(c.id)).slice(0,newLeft()).map(c=>c.id);
+  return [...due.slice(0,60), ...nw];
+}
+
+/* =========================================================
+   7. Rendu des onglets
+   ========================================================= */
+let TAB = 'reviser';
+function setTab(t){ TAB=t; renderTab(); try{ window.scrollTo(0,0); }catch(e){} }
+function renderTab(){
+  document.querySelectorAll('.tab').forEach(b=>b.setAttribute('aria-current', b.dataset.tab===TAB ? 'page':'false'));
+  const v=$('#view');
+  v.innerHTML = TAB==='reviser'? viewReviser() : TAB==='recettes'? viewRecettes() : TAB==='progres'? viewProgres() : viewReglages();
+  if(TAB==='recettes') bindRecettes();
+}
+
+function schoolLine(){
+  const {schoolStart:s, schoolEnd:e} = S.settings; if(!s) return '';
+  const st=new Date(s+'T00:00').getTime(), en=e? new Date(e+'T00:00').getTime() : st;
+  const t=today0();
+  if(t<st){ const d=Math.round((st-t)/DAY); return `<span>Formation dans <b>${plural(d,'jour')}</b></span>`; }
+  if(t<=en){ const w=Math.floor((t-st)/(7*DAY))+1, tot=Math.max(1,Math.ceil((en-st+DAY)/(7*DAY))); return `<span>Formation : <b>semaine ${w} sur ${tot}</b></span>`; }
+  return '';
+}
+
+function selChips(){
+  const fams=[...new Set(live().map(c=>c.fam).filter(Boolean))];
+  return `<div class="chips" role="group" aria-label="Sélection à réviser">${SELS.map(([k,l])=>`<button class="chip" data-a="sel" data-k="${k}" aria-pressed="${S.sel.k===k}">${l}</button>`).join('')}</div>
+  ${S.sel.k==='famille'? `<select id="famSel" aria-label="Choisir une famille" style="margin-top:8px">${fams.map(f=>`<option ${S.sel.fam===f?'selected':''}>${esc(f)}</option>`).join('')}</select>`:''}`;
+}
+
+function viewReviser(){
+  const q=reviewQueue(), L=pool();
+  const due=q.filter(id=>!isNew(id)).length, nw=q.length-due;
+  const st=streak();
+  const head = q.length
+    ? `<p class="label">Au programme aujourd’hui</p><p class="count num">${q.length}<small>${q.length>1?'cocktails':'cocktail'}</small></p>
+       <p class="sub">${[due? plural(due,'révision due','révisions dues'):'', nw? plural(nw,'nouveau cocktail à découvrir','nouveaux cocktails à découvrir'):''].filter(Boolean).join(' et ')}</p>
+       <button class="btn primary block" data-a="startReview">Commencer la révision du jour</button>`
+    : `<p class="label">Au programme aujourd’hui</p><p class="count">Service terminé</p>
+       <p class="sub">${L.length? 'Tout est révisé dans cette sélection. Lance un quiz pour t’entraîner encore, ou augmente le nombre de nouveaux cocktails par jour dans les réglages.' : 'Cette sélection est vide. Choisis-en une autre ci-dessous.'}</p>`;
+  return `<h1 class="page-title">Réviser</h1>
+  <div class="service">${head}
+    <div class="ribbon"><span>Série : <b>${plural(st,'jour')}</b></span><span>Maîtrise : <b>${globalMastery()} %</b></span>${schoolLine()}</div>
+  </div>
+  <div class="section"><h2>Sélection</h2>${selChips()}<p class="tiny" style="margin-top:6px">${plural(L.length,'cocktail')} dans « ${esc(selLabel())} ». Elle s’applique à la révision du jour, au quiz et aux flashcards.</p></div>
+  <div class="section"><h2>S’entraîner</h2>
+    <div class="modes">
+      <button class="mode" data-a="quizSetup">${I.timer}<b>Quiz chronométré</b><span>QCM ou carte à retourner, sur les doses, le verre, la technique et la garniture.</span></button>
+      <button class="mode" data-a="startFlash">${I.cards}<b>Flashcards</b><span>Retourne les fiches à ton rythme, sans note ni chrono.</span></button>
+    </div>
+  </div>`;
+}
+
+function globalMastery(){ const L=live(); if(!L.length) return 0; return Math.round(L.reduce((a,c)=>a+mastery(c.id),0)/L.length); }
+
+/* Recettes */
+let RF = {q:'', k:'tous', fam:''};
+function viewRecettes(){
+  const fams=[...new Set(live().map(c=>c.fam).filter(Boolean))].sort((a,b)=>a.localeCompare(b,'fr'));
+  const ks=[['tous','Toutes'],['fav','Favoris'],['semaine','Semaine à l’école'],['perso','Mes recettes'],['rates','À retravailler']];
+  return `<h1 class="page-title">Recettes</h1>
+  <div class="search">${I.search}<input type="search" id="rq" placeholder="Chercher un cocktail ou un ingrédient" value="${esc(RF.q)}" aria-label="Chercher"></div>
+  <div class="chips">${ks.map(([k,l])=>`<button class="chip" data-a="rf" data-k="${k}" aria-pressed="${RF.k===k}">${l}</button>`).join('')}</div>
+  <div class="row" style="margin-top:6px"><select id="rfam" aria-label="Filtrer par famille"><option value="">Toutes les familles</option>${fams.map(f=>`<option ${RF.fam===f?'selected':''}>${esc(f)}</option>`).join('')}</select></div>
+  <div id="rlist"></div>
+  <button class="fab" data-a="add">${I.plus}Ajouter</button>`;
+}
+function bindRecettes(){
+  const q=$('#rq'), f=$('#rfam');
+  q.addEventListener('input',()=>{RF.q=q.value; drawList();});
+  f.addEventListener('change',()=>{RF.fam=f.value; drawList();});
+  drawList();
+}
+function norm(s){ return (s||'').toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g,''); }
+function drawList(){
+  let L=live();
+  if(RF.k==='fav') L=L.filter(c=>c.fav);
+  if(RF.k==='semaine') L=L.filter(c=>c.week);
+  if(RF.k==='perso') L=L.filter(c=>c.custom||c.edited);
+  if(RF.k==='rates') L=L.filter(c=>toRework(c.id));
+  if(RF.fam) L=L.filter(c=>c.fam===RF.fam);
+  const q=norm(RF.q.trim());
+  if(q) L=L.filter(c=>norm(c.name).includes(q) || c.ing.some(i=>norm(i.n).includes(q)));
+  const el=$('#rlist'); if(!el) return;
+  if(!L.length){
+    el.innerHTML = `<div class="empty"><h3>Aucun cocktail ici</h3><p>${RF.k==='semaine'?'Ouvre une fiche et touche « Semaine à l’école » pour l’ajouter à cette liste.': RF.k==='fav'?'Ouvre une fiche et touche l’étoile pour l’ajouter à tes favoris.':'Change de filtre ou ajoute ta propre recette.'}</p></div>`;
+    return;
+  }
+  const weekBtn = RF.k==='semaine' ? `<button class="btn ghost small" data-a="clearWeek" style="margin-top:10px">Vider la semaine à l’école</button>` : '';
+  el.innerHTML = weekBtn + `<p class="tiny" style="margin-top:12px">${plural(L.length,'cocktail')}</p><ul class="list">${L.map(itemHTML).join('')}</ul>`;
+}
+function itemHTML(c){
+  const m=mastery(c.id), cls= isNew(c.id)?'':m>=80?'ok':m<50?'bad':'';
+  return `<li class="item" data-a="open" data-id="${c.id}" role="button" tabindex="0">
+    <span class="glass">${glassIcon(c.glass)}</span>
+    <div class="grow"><div class="nm">${esc(c.name)}</div><div class="meta">${esc(c.tech)} · ${esc(c.glass)}</div></div>
+    <div class="tags">${c.week?'<span class="dot-tag">Semaine</span>':''}${c.fav?`<span style="color:var(--brass);width:18px;height:18px;display:inline-block">${I.starFill}</span>`:''}</div>
+    <span class="mbar ${cls}" title="Maîtrise ${m} %"><span style="width:${m}%"></span></span>
+  </li>`;
+}
+
+/* Progrès */
+function viewProgres(){
+  const L=live(), g=globalMastery();
+  const seen=L.filter(c=>!isNew(c.id)).length, mastered=L.filter(c=>mastery(c.id)>=80).length;
+  const rework=L.filter(c=>toRework(c.id)).sort((a,b)=>mastery(a.id)-mastery(b.id));
+  const set=new Set(S.days); const t0=today0();
+  const days=[...Array(14)].map((_,i)=>{const t=t0-(13-i)*DAY; return `<i class="${set.has(dkey(t))?'on':''} ${i===13?'today':''}" title="${new Date(t).toLocaleDateString('fr-FR',{weekday:'long',day:'numeric',month:'long'})}"></i>`;}).join('');
+  const fill=g/100*46;
+  const sorted=[...L].filter(c=>!isNew(c.id)).sort((a,b)=>mastery(b.id)-mastery(a.id));
+  return `<h1 class="page-title">Progrès</h1>
+  <div class="card">
+    <div class="glass-meter">
+      <svg viewBox="0 0 160 150" role="img" aria-label="Maîtrise globale ${g} %">
+        <defs><clipPath id="bowl"><path d="M14 22c0 34 28 52 66 52s66-18 66-52z"/></clipPath></defs>
+        <rect x="0" y="${(74-fill).toFixed(1)}" width="160" height="${fill.toFixed(1)}" fill="var(--brass)" clip-path="url(#bowl)" opacity=".9"/>
+        <path d="M14 22c0 34 28 52 66 52s66-18 66-52z" fill="none" stroke="var(--ink)" stroke-width="2.4" stroke-linejoin="round"/>
+        <path d="M80 74v56M54 132h52" stroke="var(--ink)" stroke-width="2.4" stroke-linecap="round"/>
+      </svg>
+      <div><p class="big num">${g} %</p><p class="muted">de maîtrise sur ${plural(L.length,'cocktail')}</p></div>
+    </div>
+    <div class="stats">
+      <div class="stat"><b class="num">${streak()}</b><span>jours de série</span></div>
+      <div class="stat"><b class="num">${seen}</b><span>cocktails vus</span></div>
+      <div class="stat"><b class="num">${mastered}</b><span>maîtrisés (80 % et +)</span></div>
+    </div>
+    <p class="tiny" style="margin-top:14px">Tes 14 derniers jours de révision</p>
+    <div class="days">${days}</div>
+  </div>
+  <div class="section"><h2>À retravailler</h2>
+    ${rework.length? `<button class="btn" data-a="quizRework" style="margin-bottom:6px">${I.timer}Quiz sur ces ${rework.length} cocktails</button><ul class="list">${rework.map(itemHTML).join('')}</ul>`
+      : `<p class="muted">Rien à signaler. Un cocktail arrive ici quand tu le rates ou que sa maîtrise passe sous 60 %.</p>`}
+  </div>
+  <div class="section"><h2>Maîtrise par cocktail</h2>
+    ${sorted.length? `<ul class="list">${sorted.map(itemHTML).join('')}</ul>` : `<p class="muted">Lance ta première révision pour voir apparaître tes résultats ici.</p>`}
+  </div>
+  <p class="tiny" style="margin-top:20px">La maîtrise combine tes 5 dernières réponses et l’espacement atteint (21 jours ou plus = espacement maximal).</p>`;
+}
+
+/* Réglages */
+function seg(name, opts, cur){ return `<div class="seg" role="group">${opts.map(([v,l])=>`<button data-a="set" data-k="${name}" data-v="${v}" aria-pressed="${String(cur)===String(v)}">${l}</button>`).join('')}</div>`; }
+function viewReglages(){
+  const s=S.settings;
+  const tomb=S.cocktails.filter(c=>c.deleted && SEED.some(x=>x.id===c.id)).length;
+  return `<h1 class="page-title">Réglages</h1>
+  <div class="settings-group">
+    <div class="set-row"><span class="lbl">Unité des doses</span>${seg('unit',[['cl','cl'],['ml','ml'],['oz','oz']],s.unit)}<span class="desc">Les recettes sont stockées en ml. 1 oz est arrondi à 30 ml, la convention des bars.</span></div>
+    <div class="set-row"><span class="lbl">Chrono du quiz</span>${seg('timer',[[0,'Sans'],[10,'10 s'],[15,'15 s'],[20,'20 s'],[30,'30 s']],s.timer)}<span class="desc">Les questions « recette complète » ont le double du temps.</span></div>
+    <div class="set-row"><span class="lbl">Questions par quiz</span>${seg('len',[[10,'10'],[20,'20'],[30,'30']],s.len)}</div>
+    <div class="set-row"><span class="lbl">Nouveaux cocktails par jour</span>${seg('newPerDay',[[0,'0'],[3,'3'],[5,'5'],[10,'10'],[20,'20']],s.newPerDay)}<span class="desc">Nombre de cocktails jamais vus ajoutés à la révision du jour. Les indispensables passent en premier.</span></div>
+    <div class="set-row"><span class="lbl">Dates de la formation</span>
+      <div class="row"><label class="grow field" style="margin:0"><span>Début</span><input type="date" id="sStart" value="${esc(s.schoolStart)}"></label><label class="grow field" style="margin:0"><span>Fin</span><input type="date" id="sEnd" value="${esc(s.schoolEnd)}"></label></div>
+      <span class="desc">Affiche le compte à rebours, puis la semaine en cours, sur l’écran Réviser.</span></div>
+  </div>
+
+  <div class="section"><h2>Sauvegarde et transfert</h2>
+    <div class="settings-group">
+      <div class="set-row"><span class="lbl">Exporter mes données</span><span class="desc">Crée un fichier JSON avec tes recettes, ta progression et tes réglages. Sur téléphone, il s’ouvre dans le menu de partage (Drive, mail, WhatsApp…).</span><button class="btn" data-a="export">Exporter</button></div>
+      <div class="set-row"><span class="lbl">Importer un fichier</span><span class="desc">Fusionne avec les données de cet appareil : pour chaque cocktail, la version modifiée le plus récemment est gardée. Rien n’est écrasé à l’aveugle.</span><button class="btn" data-a="import">Importer</button></div>
+    </div>
+  </div>
+
+  <div class="section"><h2>Recettes et progression</h2>
+    <div class="settings-group">
+      <div class="set-row"><span class="lbl">Restaurer les recettes IBA supprimées</span><span class="desc">${tomb? plural(tomb,'recette IBA supprimée','recettes IBA supprimées')+'. Tes fiches modifiées ne sont pas touchées.':'Aucune recette IBA supprimée.'}</span><button class="btn" data-a="restore" ${tomb?'':'disabled'}>Restaurer</button></div>
+      <div class="set-row"><span class="lbl">Remettre la progression à zéro</span><span class="desc">Efface les notes, la révision espacée et la série. Les recettes restent.</span><button class="btn danger" data-a="resetProgress">Remettre à zéro</button></div>
+      <div class="set-row"><span class="lbl">Tout effacer sur cet appareil</span><span class="desc">Recettes, progression et réglages. Exporte d’abord si tu veux garder quelque chose.</span><button class="btn danger" data-a="wipe">Tout effacer</button></div>
+    </div>
+  </div>
+
+  <div class="section"><h2>À savoir</h2>
+    <ul class="limits">
+      <li>Les données restent sur l’appareil, dans le navigateur. Le téléphone et l’ordinateur ne se synchronisent pas seuls : passe par l’export et l’import.</li>
+      <li>Vider les données de Chrome ou désinstaller l’appli efface tout. Exporte régulièrement, surtout avant un changement de téléphone.</li>
+      <li>Les recettes fournies suivent les specs IBA. Vérifie-les sur iba-world.com et aligne-les sur les specs de ton école, qui font foi en examen.</li>
+      <li>Les conversions en oz sont arrondies pour rester lisibles.</li>
+    </ul>
+    <p class="tiny" style="margin-top:14px">Entraîneur barman ${APP_VERSION}</p>
+  </div>`;
+}
+
+/* =========================================================
+   8. Calques (fiche, formulaire, session)
+   ========================================================= */
+const layers=[];
+function openLayer(cls, render, onClose, replace=false){
+  if(replace && layers.length){ const old=layers.pop(); old.onClose && old.onClose(); old.el.remove(); }
+  const el=document.createElement('div');
+  el.className='layer '+cls; el.setAttribute('role','dialog'); el.setAttribute('aria-modal','true');
+  document.body.appendChild(el);
+  const L={el, onClose, refresh:null};
+  layers.push(L);
+  if(replace) history.replaceState({layer:layers.length},''); else history.pushState({layer:layers.length},'');
+  render(el, L);
+  requestAnimationFrame(()=>el.classList.add('in'));
+  document.body.classList.add('locked');
+  return L;
+}
+function closeTop(){ if(layers.length) history.back(); }
+window.addEventListener('popstate',()=>{
+  const L=layers.pop();
+  if(L){ L.onClose && L.onClose(); L.el.remove(); }
+  if(!layers.length) document.body.classList.remove('locked');
+  const top=layers[layers.length-1]; if(top && top.refresh) top.refresh();
+  renderTab();
+});
+
+/* Fiche */
+function specHTML(c){
+  const mls=c.ing.filter(i=>i.u==='ml'&&i.q>0).map(i=>i.q), max=Math.max(1,...mls);
+  const r=ratioStr(c);
+  return `<ul class="spec">${c.ing.map(i=>`<li class="ing"><div class="ing-line"><span class="ing-n">${esc(i.n)}</span><span class="lead"></span><span class="ing-q">${esc(fmtQ(i))}</span></div>${i.u==='ml'&&i.q>0?`<div class="pour"><span style="width:${(i.q/max*100).toFixed(1)}%"></span></div>`:''}</li>`).join('')}</ul>
+  ${r?`<div class="ratio"><span>Ratio des liquides</span><b class="num">${r}</b></div>`:''}`;
+}
+function factsHTML(c){
+  return `<div class="facts">
+    <div class="fact">${glassIcon(c.glass)}<div><div class="k">Verre</div><div class="v">${esc(c.glass)}</div></div></div>
+    <div class="fact">${I.shaker}<div><div class="k">Technique</div><div class="v">${esc(c.tech)}</div></div></div>
+    <div class="fact">${I.ice}<div><div class="k">Glace</div><div class="v">${esc(c.ice)}</div></div></div>
+    <div class="fact">${I.leaf}<div><div class="k">Garniture</div><div class="v">${esc(c.garnish||'Aucune')}</div></div></div>
+  </div>`;
+}
+function openDetail(id){
+  openLayer('sheet', (el,L)=>{
+    const draw=()=>{
+      const c=byId(id); if(!c||c.deleted){ el.innerHTML='<div class="sheet-in"><div class="sheet-body"><p class="empty">Fiche supprimée.</p></div></div>'; return; }
+      const m=mastery(id), seed=SEED.find(s=>s.id===id);
+      el.innerHTML=`<div class="sheet-in">
+        <div class="sheet-head"><button class="icon-btn" data-a="close" aria-label="Fermer">${I.back}</button><span class="t">Fiche technique</span><button class="icon-btn" data-a="fav" data-id="${id}" aria-label="${c.fav?'Retirer des favoris':'Ajouter aux favoris'}" style="color:var(--brass)">${c.fav?I.starFill:I.star}</button></div>
+        <div class="sheet-body">
+          <h2 class="detail-name">${esc(c.name)}</h2>
+          <p class="detail-sub">${esc(CATS[c.cat]||c.cat||'')}${c.fam?' · '+esc(c.fam):''}${c.edited?' · modifiée':''}</p>
+          <div class="card">${specHTML(c)}</div>
+          ${factsHTML(c)}
+          ${c.note?`<p class="note">${esc(c.note)}</p>`:''}
+          <div class="toggle-row"><button class="btn" data-a="week" data-id="${id}" aria-pressed="${!!c.week}">${I.cal}${c.week?'Dans la semaine à l’école':'Semaine à l’école'}</button></div>
+          <div class="progress-line"><span class="mbar ${m>=80?'ok':m<50&&!isNew(id)?'bad':''}"><span style="width:${m}%"></span></span><span>Maîtrise ${m} % · ${esc(dueLabel(id))}</span></div>
+          <div class="actions">
+            <button class="btn primary" data-a="drill" data-id="${id}">${I.repeat}Me tester</button>
+            <button class="btn" data-a="edit" data-id="${id}">${I.edit}Modifier</button>
+            ${seed && c.edited?`<button class="btn ghost" data-a="revert" data-id="${id}">Revenir à la spec IBA</button>`:''}
+            <button class="btn danger" data-a="del" data-id="${id}">${I.trash}Supprimer</button>
+          </div>
+        </div></div>`;
+    };
+    L.refresh=draw; draw();
+  });
+}
+
+/* Formulaire */
+function openEdit(id){
+  const c = id ? JSON.parse(JSON.stringify(byId(id))) : {id:null,name:'',cat:'E',fam:'Sour',glass:'Verre à cocktail',tech:T.SH,ice:G.N,garnish:'',ing:[{n:'',q:0,u:'ml'}],note:''};
+  const u=S.settings.unit;
+  const unitOpts = cur => [`<option value="ml" ${cur==='ml'?'selected':''}>${u}</option>`, ...UNITS.map(x=>`<option ${cur===x?'selected':''}>${esc(x)}</option>`)].join('');
+  const rowHTML = i => `<div class="ing-edit"><input type="text" class="in-n" placeholder="Ingrédient" value="${esc(i.n)}" aria-label="Ingrédient"><input type="text" inputmode="decimal" class="in-q" placeholder="${u}" value="${i.u==='ml'?fromMl(i.q):(i.q?String(i.q).replace('.',','):'')}" aria-label="Quantité"><select class="in-u" aria-label="Unité">${unitOpts(i.u)}</select><button type="button" class="icon-btn" data-a="ingDel" aria-label="Retirer l’ingrédient">${I.x}</button></div>`;
+  const dl=(lid,arr)=>`<datalist id="${lid}">${[...new Set(arr)].map(x=>`<option value="${esc(x)}">`).join('')}</datalist>`;
+  openLayer('sheet', el=>{
+    el.innerHTML=`<div class="sheet-in">
+      <div class="sheet-head"><button class="icon-btn" data-a="close" aria-label="Annuler">${I.x}</button><span class="t">${id?'Modifier la fiche':'Nouvelle recette'}</span><button class="btn primary" data-a="saveEdit" style="min-height:38px;padding:0 16px">Enregistrer</button></div>
+      <div class="sheet-body">
+        <label class="field"><span>Nom</span><input type="text" id="fName" value="${esc(c.name)}" required></label>
+        <div class="row"><label class="field grow"><span>Origine</span><select id="fCat">${Object.entries(CATS).map(([k,l])=>`<option value="${k}" ${c.cat===k?'selected':''}>${esc(l)}</option>`).join('')}</select></label>
+        <label class="field grow"><span>Famille</span><input type="text" id="fFam" list="dlFam" value="${esc(c.fam)}"></label></div>
+        <span class="small muted">Ingrédients (doses en ${u})</span>
+        <div id="ings" style="margin-top:8px">${c.ing.map(rowHTML).join('')}</div>
+        <button type="button" class="btn ghost" data-a="ingAdd" style="margin-bottom:16px">${I.plus}Ajouter un ingrédient</button>
+        <div class="row"><label class="field grow"><span>Verre</span><input type="text" id="fGlass" list="dlGlass" value="${esc(c.glass)}"></label>
+        <label class="field grow"><span>Technique</span><input type="text" id="fTech" list="dlTech" value="${esc(c.tech)}"></label></div>
+        <div class="row"><label class="field grow"><span>Glace</span><input type="text" id="fIce" list="dlIce" value="${esc(c.ice)}"></label>
+        <label class="field grow"><span>Garniture</span><input type="text" id="fGarn" value="${esc(c.garnish)}" placeholder="Aucune"></label></div>
+        <label class="field"><span>Note d’histoire ou astuce</span><textarea id="fNote">${esc(c.note)}</textarea></label>
+        ${dl('dlFam',[...FAMILIES,...S.cocktails.map(x=>x.fam)])}${dl('dlGlass',[...GLASSES,...S.cocktails.map(x=>x.glass)])}${dl('dlTech',[...TECHS,...S.cocktails.map(x=>x.tech)])}${dl('dlIce',ICES)}
+      </div></div>`;
+    el._row = rowHTML; el._editId = id;
+  });
+}
+function saveEdit(el){
+  const name=$('#fName',el).value.trim();
+  if(!name){ toast('Donne un nom au cocktail'); $('#fName',el).focus(); return; }
+  const ing=[...el.querySelectorAll('.ing-edit')].map(r=>{
+    const n=$('.in-n',r).value.trim(), u=$('.in-u',r).value, raw=$('.in-q',r).value.trim();
+    if(!n) return null;
+    if(u==='ml') return {n, q:toMl(raw), u:'ml'};
+    const q=parseFloat(raw.replace(',','.')); return {n, q:isFinite(q)?q:0, u};
+  }).filter(Boolean);
+  if(!ing.length){ toast('Ajoute au moins un ingrédient'); return; }
+  const data={name, cat:$('#fCat',el).value, fam:$('#fFam',el).value.trim(), glass:$('#fGlass',el).value.trim()||'Verre à cocktail',
+    tech:$('#fTech',el).value.trim()||T.SH, ice:$('#fIce',el).value.trim()||G.N, garnish:$('#fGarn',el).value.trim()||'Aucune', note:$('#fNote',el).value.trim(), ing};
+  const id=el._editId;
+  if(id){ const c=byId(id); Object.assign(c,data,{edited:!c.custom, updatedAt:Date.now()}); toast('Fiche enregistrée'); }
+  else { S.cocktails.push({...data,id:uid(),rank:1000,essential:false,fav:false,week:false,custom:true,edited:false,deleted:false,updatedAt:Date.now()}); toast('Recette ajoutée'); }
+  save(); closeTop();
+}
+
+/* =========================================================
+   9. Questions
+   ========================================================= */
+const DOSES=[5,7.5,10,15,20,22.5,25,30,35,40,45,50,60,75,90,100,120];
+function specText(ing){ return ing.map(i=>`${esc(i.n)} <b>${esc(fmtQ(i))}</b>`).join('<br>'); }
+function specKey(ing){ return ing.map(i=>i.n+'|'+i.q+'|'+i.u).join(';'); }
+function mutateDose(ing){
+  const c=ing.map(i=>({...i})); const ml=c.filter(i=>i.u==='ml'&&i.q>0); if(!ml.length) return null;
+  const t=pick(ml); const near=DOSES.filter(d=>d!==t.q).sort((a,b)=>Math.abs(a-t.q)-Math.abs(b-t.q)).slice(0,4);
+  t.q=pick(near); return c;
+}
+function swapIng(ing, all){
+  const c=ing.map(i=>({...i})); const names=new Set(c.map(i=>i.n));
+  const pool=[...new Set(all.flatMap(x=>x.ing.map(i=>i.n)))].filter(n=>!names.has(n));
+  if(!pool.length) return null; const i=Math.floor(Math.random()*c.length); c[i].n=pick(pool); return c;
+}
+function specOptions(c){
+  const all=live(), seen=new Set([specKey(c.ing)]), out=[];
+  const fams=all.filter(x=>x.id!==c.id && x.fam===c.fam && x.ing.length>=2);
+  const tries=[()=>mutateDose(c.ing), ()=>swapIng(c.ing,all), ()=>fams.length?pick(fams).ing:null, ()=>{const m=mutateDose(c.ing); return m?mutateDose(m):null;}, ()=>{ const o=all.filter(x=>x.id!==c.id); return o.length? pick(o).ing : null; }];
+  for(let k=0;k<40 && out.length<3;k++){
+    const r=tries[k%tries.length](); if(!r) continue;
+    const key=specKey(r); const txt=specText(r);
+    if(seen.has(key) || out.some(o=>o.html===txt) || txt===specText(c.ing)) continue;
+    seen.add(key); out.push({html:`<span class="spec-lines">${txt}</span>`, correct:false});
+  }
+  return shuffle([{html:`<span class="spec-lines">${specText(c.ing)}</span>`, correct:true}, ...out]);
+}
+function textOptions(correct, pool){
+  const others=shuffle([...new Set(pool)].filter(x=>x && norm(x)!==norm(correct))).slice(0,3);
+  return shuffle([{html:esc(correct),correct:true}, ...others.map(o=>({html:esc(o),correct:false}))]);
+}
+function applicable(c,t){
+  if(t==='dose') return c.ing.some(i=>i.u==='ml'&&i.q>0);
+  if(t==='garniture') return c.garnish && !/^aucune$/i.test(c.garnish.trim());
+  return true;
+}
+function buildQ(c, type, fmt){
+  const q={id:c.id, type, fmt, name:c.name};
+  if(type==='spec'){ q.prompt='Quelle est la recette ?'; if(fmt==='qcm') q.options=specOptions(c); q.answer=''; }
+  else if(type==='dose'){
+    const ml=c.ing.filter(i=>i.u==='ml'&&i.q>0); const ing=pick(ml);
+    q.prompt=`Combien de ${ing.n.toLowerCase()} ?`;
+    const near=DOSES.filter(d=>d!==ing.q).sort((a,b)=>Math.abs(a-ing.q)-Math.abs(b-ing.q)).slice(0,5);
+    const labels=new Set([fmtMl(ing.q)]); const opts=[];
+    shuffle(near).forEach(d=>{ const l=fmtMl(d); if(opts.length<3 && !labels.has(l)){ labels.add(l); opts.push({html:esc(l),correct:false}); } });
+    q.options=shuffle([{html:esc(fmtMl(ing.q)),correct:true}, ...opts]);
+    q.answer=`${ing.n} : ${fmtMl(ing.q)}`;
+  }
+  else if(type==='verre'){ q.prompt='Dans quel verre se sert-il ?'; q.options=textOptions(c.glass,[...GLASSES,...live().map(x=>x.glass)]); q.answer=c.glass; }
+  else if(type==='technique'){ q.prompt='Quelle technique ?'; q.options=textOptions(c.tech,[...TECHS,...live().map(x=>x.tech)]); q.answer=c.tech; }
+  else { q.prompt='Quelle garniture ?'; q.options=textOptions(c.garnish, live().map(x=>x.garnish).filter(g=>!/^aucune/i.test(g||''))); q.answer=c.garnish; }
+  return q;
+}
+
+/* =========================================================
+   10. Sessions : révision, quiz, flashcards
+   ========================================================= */
+let SES=null, TICK=null;
+function stopTimer(){ clearInterval(TICK); TICK=null; }
+
+function weightedQueue(L, n){
+  const items=L.map(c=>({id:c.id, w:1+(100-mastery(c.id))/20+(isDue(c.id)?2:0)+(isNew(c.id)?1:0)}));
+  const out=[]; let bag=[...items];
+  while(out.length<n){
+    if(!bag.length) bag=[...items];
+    const tot=bag.reduce((a,b)=>a+b.w,0); let r=Math.random()*tot, k=0;
+    for(;k<bag.length;k++){ r-=bag[k].w; if(r<=0) break; }
+    k=Math.min(k,bag.length-1);
+    const it=bag.splice(k,1)[0];
+    if(out[out.length-1]===it.id && items.length>1){ bag.push(it); continue; }
+    out.push(it.id);
+  }
+  return out;
+}
+
+function startSession(kind, ids, opts={}, replace=false){
+  if(!ids.length){ toast('Aucun cocktail à réviser dans cette sélection'); return; }
+  const ses={kind, ids:[...ids], i:-1, res:[], opts, requeued:new Set()};
+  openLayer('session', el=>{ SES=ses; SES.el=el; nextQ(); }, ()=>{ stopTimer(); if(SES===ses) SES=null; }, replace);
+}
+function nextQ(){
+  stopTimer();
+  SES.i++;
+  if(SES.i>=SES.ids.length) return showResults();
+  const c=byId(SES.ids[SES.i]);
+  if(!c || c.deleted) return nextQ();
+  SES.flipped=false; SES.answered=false; SES.timeout=false;
+  if(SES.kind==='flash') return drawFlash();
+  let type='spec', fmt='carte';
+  if(SES.kind==='quiz'){
+    const types=SES.opts.types.filter(t=>applicable(c,t)); type=types.length? pick(types) : 'spec';
+    fmt = SES.opts.format==='mix' ? pick(['qcm','carte']) : SES.opts.format;
+  }
+  SES.q=buildQ(c,type,fmt);
+  drawQ();
+  const secs = SES.kind==='quiz' ? S.settings.timer*(type==='spec'?2:1) : 0;
+  if(secs>0) startTimer(secs);
+}
+function sesTop(label){
+  const n=SES.ids.length;
+  return `<div class="ses-top"><button class="icon-btn" data-a="close" aria-label="Quitter">${I.x}</button><span class="count num">${Math.min(SES.i+1,n)} / ${n}</span><span style="width:44px"></span></div>
+  <div class="timer ${SES.kind==='quiz'&&S.settings.timer?'':'off'}" id="tbar"><span></span></div>
+  <p class="ses-kind">${label}</p>`;
+}
+function drawQ(){
+  const q=SES.q, c=byId(q.id), el=SES.el;
+  const label = SES.kind==='review' ? 'Révision du jour' : 'Quiz · '+QTYPES[q.type];
+  let body;
+  if(q.fmt==='qcm'){
+    body=`<div class="opts" role="group" aria-label="Réponses">${q.options.map((o,i)=>`<button class="opt" data-a="pickOpt" data-i="${i}"><span class="k">${i+1}</span><span>${o.html}</span></button>`).join('')}</div>
+    <div id="after"></div>`;
+  } else if(!SES.flipped){
+    body=`<div class="flipcard front" data-a="flip" role="button" tabindex="0">${glassIcon(c.glass)}<p class="hint">Réponds dans ta tête, à voix haute ou sur papier, puis retourne la carte.</p></div>
+    <div class="ses-foot"><button class="btn primary block" data-a="flip">Retourner la carte</button><p class="kbd">Espace pour retourner</p></div>`;
+  } else {
+    body=`<div class="flipcard back">${q.type!=='spec'&&q.answer?`<p class="answer-big">${esc(q.answer)}</p>`:''}${specHTML(c)}${factsHTML(c)}</div>
+    <div class="ses-foot">${SES.timeout?'<p class="verdict ko">Temps écoulé</p>':''}<p class="small muted">Avais-tu juste ?</p>
+    <div class="grades"><button class="btn g0" data-a="grade" data-g="0">Raté<small>revient vite</small></button><button class="btn g1" data-a="grade" data-g="1">Hésitant<small>revient bientôt</small></button><button class="btn g2" data-a="grade" data-g="2">Juste<small>s’espace</small></button></div>
+    <p class="kbd">Touches 1, 2, 3</p></div>`;
+  }
+  el.innerHTML=`<div class="ses">${sesTop(label)}<div class="ses-body"><h2 class="ses-name">${esc(c.name)}</h2><p class="ses-prompt">${esc(q.prompt)}</p>${body}</div></div>`;
+}
+function startTimer(secs){
+  SES.timeout=false;
+  const end=Date.now()+secs*1000, total=secs*1000;
+  const tick=()=>{
+    const bar=$('#tbar span'); const left=end-Date.now();
+    if(bar){ bar.style.transform=`scaleX(${Math.max(0,left/total)})`; $('#tbar').classList.toggle('low', left<total*.25); }
+    if(left<=0){ stopTimer(); SES.timeout=true;
+      if(SES.q.fmt==='qcm') pickOpt(-1); else flip(); }
+  };
+  tick(); TICK=setInterval(tick,100);
+}
+function flip(){ if(!SES||SES.flipped||SES.q.fmt!=='carte') return; stopTimer(); SES.flipped=true; drawQ(); }
+function pickOpt(i){
+  if(!SES || SES.answered) return;
+  stopTimer(); SES.answered=true;
+  const q=SES.q, ok = i>=0 && q.options[i].correct;
+  SES.el.querySelectorAll('.opt').forEach((b,k)=>{ b.disabled=true; const o=q.options[k]; b.classList.add(o.correct?'right': k===i?'wrong':'dim'); });
+  const g= ok?2:0; record(g);
+  const c=byId(q.id);
+  $('#after',SES.el).innerHTML=`<p class="verdict ${ok?'ok':'ko'}">${ok?'Bonne réponse':(i<0?'Temps écoulé':'Pas tout à fait')}</p>
+    <div class="card">${specHTML(c)}<p class="tiny" style="margin-top:10px">${esc(c.glass)} · ${esc(c.tech)} · ${esc(c.ice)} · ${esc(c.garnish)}</p></div>
+    <div class="ses-foot"><button class="btn primary block" data-a="next" id="nextBtn">${SES.i+1>=SES.ids.length?'Voir le résultat':'Question suivante'}</button><p class="kbd">Entrée pour continuer</p></div>`;
+  $('#nextBtn').focus({preventScroll:true});
+  const af=$('#after',SES.el); if(af && af.scrollIntoView) af.scrollIntoView({behavior:'smooth',block:'start'});
+}
+function record(g){
+  const id=SES.q.id;
+  grade(id,g);
+  SES.res.push({id, g, type:SES.q.type});
+  if(SES.kind==='review' && g===0 && !SES.requeued.has(id)){ SES.requeued.add(id); SES.ids.push(id); }
+}
+function showResults(){
+  stopTimer(); SES.q=null;
+  const r=SES.res, n=r.length;
+  const score = n? Math.round(r.reduce((a,x)=>a+x.g/2,0)/n*100) : 0;
+  const missed=[...new Set(r.filter(x=>x.g<2).map(x=>x.id))];
+  const title = SES.kind==='review' ? 'Révision terminée' : 'Quiz terminé';
+  const msg = score>=90?'Prêt pour le service.': score>=70?'Solide. Quelques specs à resserrer.': score>=40?'Ça rentre. Les ratés reviendront plus souvent.':'Normal au début : la répétition espacée va faire le travail.';
+  SES.el.innerHTML=`<div class="ses"><div class="ses-top"><button class="icon-btn" data-a="close" aria-label="Fermer">${I.x}</button><span class="count">${title}</span><span style="width:44px"></span></div>
+  <div class="ses-body">
+    <p class="ses-kind">${plural(n,'réponse')}</p>
+    <h2 class="ses-name num">${score} %</h2>
+    <p class="ses-prompt">${msg}</p>
+    ${missed.length?`<h3 style="font-size:19px;margin:8px 0 4px">À retravailler</h3><ul class="list">${missed.map(id=>byId(id)).filter(Boolean).map(itemHTML).join('')}</ul>`:''}
+    <div class="ses-foot">
+      ${missed.length&&SES.kind==='quiz'?`<button class="btn primary block" data-a="retryMissed">Rejouer les ${plural(missed.length,'raté')}</button>`:''}
+      <button class="btn block" data-a="close">Terminer</button>
+    </div>
+  </div></div>`;
+  SES.missed=missed;
+}
+
+/* Flashcards */
+function drawFlash(){
+  const c=byId(SES.ids[SES.i]), el=SES.el, n=SES.ids.length;
+  const card = SES.flipped
+    ? `<div class="flipcard back" data-a="flip" id="fc">${specHTML(c)}${factsHTML(c)}${c.note?`<p class="note">${esc(c.note)}</p>`:''}</div>`
+    : `<div class="flipcard front" data-a="flip" id="fc" role="button" tabindex="0">${glassIcon(c.glass)}<p class="hint">Touche pour voir la fiche</p></div>`;
+  el.innerHTML=`<div class="ses"><div class="ses-top"><button class="icon-btn" data-a="close" aria-label="Quitter">${I.x}</button><span class="count num">${SES.i+1} / ${n}</span><button class="icon-btn" data-a="fav" data-id="${c.id}" style="color:var(--brass)" aria-label="Favori">${c.fav?I.starFill:I.star}</button></div>
+  <div class="timer off"><span></span></div>
+  <div class="ses-body"><p class="ses-kind">Flashcards · ${esc(selLabel())}</p><h2 class="ses-name">${esc(c.name)}</h2><p class="ses-prompt">${esc(c.fam||'')}</p>${card}
+  <div class="ses-foot"><div class="row"><button class="btn grow" data-a="fprev" ${SES.i===0?'disabled':''}>Précédent</button><button class="btn primary grow" data-a="fnext">${SES.i+1>=n?'Terminer':'Suivant'}</button></div><p class="kbd">Flèches pour naviguer, espace pour retourner</p></div></div></div>`;
+  const fc=$('#fc',el); let x0=null;
+  fc.addEventListener('touchstart',e=>{x0=e.touches[0].clientX},{passive:true});
+  fc.addEventListener('touchend',e=>{ if(x0===null) return; const dx=e.changedTouches[0].clientX-x0; x0=null; if(Math.abs(dx)>60){ e.preventDefault(); dx<0? flashMove(1) : flashMove(-1); } });
+}
+function flashMove(d){
+  if(!SES) return;
+  if(d>0 && SES.i+1>=SES.ids.length){ closeTop(); toast('Paquet terminé'); return; }
+  SES.i=Math.max(0,SES.i+d); SES.flipped=false; drawFlash();
+}
+
+/* Configuration du quiz */
+function openQuizSetup(ids){
+  const st={types:[...S.settings.types], format:S.settings.format};
+  const L=ids? ids.map(byId).filter(Boolean) : pool();
+  openLayer('sheet', el=>{
+    const draw=()=>{
+      el.innerHTML=`<div class="sheet-in"><div class="sheet-head"><button class="icon-btn" data-a="close" aria-label="Fermer">${I.x}</button><span class="t">Quiz chronométré</span><span style="width:44px"></span></div>
+      <div class="sheet-body">
+        <p class="muted" style="margin-bottom:18px">${plural(L.length,'cocktail')} · ${ids?'cocktails à retravailler':esc(selLabel())}. Les cocktails faibles ou dus sortent plus souvent.</p>
+        <div class="field"><span>Types de questions</span><div class="chips" style="flex-wrap:wrap">${Object.entries(QTYPES).map(([k,l])=>`<button class="chip" data-a="qt" data-k="${k}" aria-pressed="${st.types.includes(k)}">${l}</button>`).join('')}</div></div>
+        <div class="field"><span>Format</span><div class="seg">${[['qcm','QCM'],['carte','Carte à retourner'],['mix','Mélange']].map(([v,l])=>`<button data-a="qf" data-v="${v}" aria-pressed="${st.format===v}">${l}</button>`).join('')}</div></div>
+        <div class="field"><span>Chrono</span>${seg('timer',[[0,'Sans'],[10,'10 s'],[15,'15 s'],[20,'20 s'],[30,'30 s']],S.settings.timer)}</div>
+        <div class="field"><span>Nombre de questions</span>${seg('len',[[10,'10'],[20,'20'],[30,'30']],S.settings.len)}</div>
+        <button class="btn primary block" data-a="goQuiz" ${st.types.length&&L.length?'':'disabled'} style="margin-top:10px">Lancer le quiz</button>
+      </div></div>`;
+    };
+    el._st=st; el._draw=draw; el._ids=L.map(c=>c.id); draw();
+  });
+}
+
+/* =========================================================
+   11. Export / import
+   ========================================================= */
+async function exportData(){
+  const data={app:'entraineur-barman', v:1, exportedAt:new Date().toISOString(), cocktails:S.cocktails, progress:S.progress, days:S.days, newDay:S.newDay, settings:S.settings};
+  const name=`entraineur-barman-${dkey()}.json`;
+  const blob=new Blob([JSON.stringify(data)],{type:'application/json'});
+  try{
+    const file=new File([blob],name,{type:'application/json'});
+    if(matchMedia('(pointer:coarse)').matches && navigator.canShare && navigator.canShare({files:[file]})){
+      await navigator.share({files:[file], title:'Sauvegarde Entraîneur barman'}); toast('Sauvegarde partagée'); return;
+    }
+  }catch(e){ if(e && e.name==='AbortError') return; }
+  const a=document.createElement('a'); a.href=URL.createObjectURL(blob); a.download=name; document.body.appendChild(a); a.click();
+  setTimeout(()=>{URL.revokeObjectURL(a.href); a.remove();},1000);
+  toast('Fichier téléchargé');
+}
+function mergeData(inc){
+  if(!inc || inc.app!=='entraineur-barman' || !Array.isArray(inc.cocktails)) throw new Error('format');
+  let added=0, updated=0;
+  inc.cocktails.forEach(c=>{
+    if(!c || !c.id || !c.name || !Array.isArray(c.ing)) return;
+    const k=S.cocktails.findIndex(x=>x.id===c.id);
+    if(k<0){ S.cocktails.push(c); added++; }
+    else if((c.updatedAt||0) > (S.cocktails[k].updatedAt||0)){ S.cocktails[k]=c; updated++; }
+  });
+  let prog=0;
+  Object.entries(inc.progress||{}).forEach(([id,p])=>{
+    if(!p || !Array.isArray(p.h)) return;
+    const cur=S.progress[id];
+    if(!cur || (p.updatedAt||0)>(cur.updatedAt||0)){ S.progress[id]=p; prog++; }
+  });
+  S.days=[...new Set([...S.days, ...(inc.days||[])])].sort();
+  if(inc.settings && (inc.settings.updatedAt||0)>(S.settings.updatedAt||0)) S.settings=Object.assign({},DEFAULT_SETTINGS,inc.settings);
+  save();
+  return {added, updated, prog};
+}
+$('#importFile').addEventListener('change', async e=>{
+  const f=e.target.files[0]; e.target.value=''; if(!f) return;
+  try{
+    const r=mergeData(JSON.parse(await f.text()));
+    toast(`Import terminé : ${r.added} ajoutés, ${r.updated} mis à jour, ${r.prog} progressions`);
+    renderTab();
+  }catch(err){ toast('Ce fichier n’est pas une sauvegarde Entraîneur barman'); }
+});
+
+/* =========================================================
+   12. Actions
+   ========================================================= */
+function setSetting(k,v){
+  const num=['timer','len','newPerDay']; S.settings[k]= num.includes(k)? Number(v) : v;
+  S.settings.updatedAt=Date.now(); save();
+}
+const A = {
+  tab:b=>setTab(b.dataset.tab),
+  close:()=>closeTop(),
+  sel:b=>{ S.sel={k:b.dataset.k, fam:S.sel.fam}; if(S.sel.k==='famille' && !S.sel.fam) S.sel.fam=(live()[0]||{}).fam; save(); renderTab(); },
+  rf:b=>{ RF.k=b.dataset.k; document.querySelectorAll('[data-a="rf"]').forEach(x=>x.setAttribute('aria-pressed',x===b)); drawList(); },
+  open:b=>openDetail(b.dataset.id),
+  add:()=>openEdit(null),
+  edit:b=>openEdit(b.dataset.id),
+  fav:b=>{ const c=byId(b.dataset.id); c.fav=!c.fav; c.updatedAt=Date.now(); save(); toast(c.fav?'Ajouté aux favoris':'Retiré des favoris');
+           if(SES && SES.kind==='flash') drawFlash(); else { const t=layers[layers.length-1]; t&&t.refresh&&t.refresh(); } },
+  week:b=>{ const c=byId(b.dataset.id); c.week=!c.week; c.updatedAt=Date.now(); save(); toast(c.week?'Ajouté à la semaine à l’école':'Retiré de la semaine à l’école'); const t=layers[layers.length-1]; t&&t.refresh&&t.refresh(); },
+  clearWeek:()=>{ if(!confirm('Retirer tous les cocktails de la semaine à l’école ?')) return; live().filter(c=>c.week).forEach(c=>{c.week=false;c.updatedAt=Date.now();}); save(); drawList(); toast('Semaine vidée'); },
+  del:b=>{ const c=byId(b.dataset.id); if(!confirm(`Supprimer « ${c.name} » ?`+(c.custom?'':'\nTu pourras la restaurer depuis les réglages.'))) return;
+           c.deleted=true; c.updatedAt=Date.now(); save(); toast('Fiche supprimée'); closeTop(); },
+  revert:b=>{ const c=byId(b.dataset.id), s=SEED.find(x=>x.id===c.id); if(!s||!confirm('Remplacer ta version par la spec IBA d’origine ?')) return;
+           Object.assign(c, JSON.parse(JSON.stringify(s)), {edited:false, updatedAt:Date.now()}); save(); toast('Spec IBA rétablie'); layers[layers.length-1].refresh(); },
+  drill:b=>startSession('quiz',[b.dataset.id,b.dataset.id,b.dataset.id],{types:['spec','dose','verre','technique','garniture'],format:'mix'}),
+  ingAdd:b=>{ const el=b.closest('.layer'); $('#ings',el).insertAdjacentHTML('beforeend', el._row({n:'',q:0,u:'ml'})); const rows=el.querySelectorAll('.in-n'); rows[rows.length-1].focus(); },
+  ingDel:b=>{ const r=b.closest('.ing-edit'); if(r.parentElement.children.length>1) r.remove(); else r.querySelectorAll('input').forEach(i=>i.value=''); },
+  saveEdit:b=>saveEdit(b.closest('.layer')),
+  startReview:()=>startSession('review', reviewQueue()),
+  startFlash:()=>startSession('flash', shuffle(pool().map(c=>c.id))),
+  quizSetup:()=>openQuizSetup(null),
+  quizRework:()=>openQuizSetup(live().filter(c=>toRework(c.id)).map(c=>c.id)),
+  qt:b=>{ const el=b.closest('.layer'), st=el._st, k=b.dataset.k; st.types = st.types.includes(k)? st.types.filter(x=>x!==k) : [...st.types,k]; el._draw(); },
+  qf:b=>{ const el=b.closest('.layer'); el._st.format=b.dataset.v; el._draw(); },
+  goQuiz:b=>{ const el=b.closest('.layer'), st=el._st, L=el._ids.map(byId).filter(c=>c&&!c.deleted);
+              S.settings.types=st.types; S.settings.format=st.format; S.settings.updatedAt=Date.now(); save();
+              const ids=weightedQueue(L, S.settings.len); startSession('quiz',ids,{types:st.types,format:st.format},true); },
+  set:b=>{ setSetting(b.dataset.k,b.dataset.v); const el=b.closest('.layer'); if(el && el._draw) el._draw(); else renderTab(); },
+  flip:()=>{ if(!SES) return; if(SES.kind==='flash'){ SES.flipped=!SES.flipped; drawFlash(); } else flip(); },
+  grade:b=>{ if(!SES||!SES.flipped) return; record(Number(b.dataset.g)); nextQ(); },
+  pickOpt:b=>pickOpt(Number(b.dataset.i)),
+  next:()=>nextQ(),
+  fprev:()=>flashMove(-1), fnext:()=>flashMove(1),
+  retryMissed:()=>{ const m=SES.missed, o=SES.opts; startSession('quiz', weightedQueue(m.map(byId).filter(Boolean), Math.max(m.length, Math.min(10,m.length*2))), o, true); },
+  export:()=>exportData(),
+  import:()=>$('#importFile').click(),
+  restore:()=>{ let n=0; S.cocktails.forEach(c=>{ if(c.deleted && SEED.some(s=>s.id===c.id)){ c.deleted=false; c.updatedAt=Date.now(); n++; } }); save(); renderTab(); toast(plural(n,'recette restaurée','recettes restaurées')); },
+  resetProgress:()=>{ if(!confirm('Effacer toute ta progression ? Les recettes restent.')) return; S.progress={}; S.days=[]; S.newDay={d:'',n:0}; save(); renderTab(); toast('Progression remise à zéro'); },
+  wipe:()=>{ if(!confirm('Tout effacer sur cet appareil ? Cette action est définitive.')) return; localStorage.removeItem(KEY); S=load(); save(); renderTab(); toast('Données effacées'); }
+};
+document.addEventListener('click', e=>{
+  const b=e.target.closest('[data-a]'); if(!b || b.disabled) return;
+  const f=A[b.dataset.a]; if(f){ f(b,e); }
+});
+document.addEventListener('change', e=>{
+  if(e.target.id==='famSel'){ S.sel.fam=e.target.value; save(); renderTab(); }
+  if(e.target.id==='sStart'){ setSetting('schoolStart', e.target.value); }
+  if(e.target.id==='sEnd'){ setSetting('schoolEnd', e.target.value); }
+});
+document.addEventListener('keydown', e=>{
+  if(e.key==='Escape' && layers.length){ closeTop(); return; }
+  if(e.target.matches('input,textarea,select')) return;
+  if((e.key==='Enter'||e.key===' ') && e.target.matches('[role="button"][data-a]')){ e.preventDefault(); e.target.click(); return; }
+  if(!SES) return;
+  if(SES.kind==='flash'){
+    if(e.key==='ArrowRight') flashMove(1); else if(e.key==='ArrowLeft') flashMove(-1); else if(e.key===' '){ e.preventDefault(); SES.flipped=!SES.flipped; drawFlash(); }
+    return;
+  }
+  if(!SES.q) return;
+  if(SES.q.fmt==='qcm'){
+    if(!SES.answered && /^[1-4]$/.test(e.key) && SES.q.options[+e.key-1]) pickOpt(+e.key-1);
+    else if(SES.answered && e.key==='Enter'){ e.preventDefault(); nextQ(); }
+  } else {
+    if(!SES.flipped && e.key===' '){ e.preventDefault(); flip(); }
+    else if(SES.flipped && /^[1-3]$/.test(e.key)){ record(+e.key-1); nextQ(); }
+  }
+});
+
+/* =========================================================
+   13. Démarrage
+   ========================================================= */
+save();
+renderTab();
+if('serviceWorker' in navigator && location.protocol.startsWith('http')){
+  window.addEventListener('load',()=>navigator.serviceWorker.register('sw.js').catch(()=>{}));
+}
+</script>
+</body>
+</html>
