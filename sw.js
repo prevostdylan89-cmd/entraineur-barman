@@ -1,5 +1,5 @@
 /* Entraîneur barman : réseau d'abord, cache en secours hors connexion */
-const CACHE = 'entraineur-barman-v1';
+const CACHE = 'entraineur-barman-v2';
 const CORE = ['./', './index.html', './manifest.json', './icon-192.png', './icon-512.png', './icon-maskable-512.png'];
 
 self.addEventListener('install', e => {

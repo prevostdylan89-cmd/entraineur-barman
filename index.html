@@ -16,7 +16,7 @@
   --bg:#EEF0EA; --surface:#F8F8F4; --surface-2:#E2E7DE; --ink:#13302A; --ink-2:#4D605A; --ink-3:#7A8A84;
   --brass:#8C6A1E; --brass-soft:rgba(140,106,30,.14); --on-brass:#FFF8E6;
   --line:rgba(19,48,42,.14); --line-2:rgba(19,48,42,.26);
-  --ok:#2F7A45; --ok-soft:rgba(47,122,69,.13); --bad:#B3263E; --bad-soft:rgba(179,38,62,.12); --warn:#9A6A12;
+  --ok:#2F7A45; --ok-soft:rgba(47,122,69,.13); --bad:#B3263E; --bad-soft:rgba(179,38,62,.12); --warn:#9A6A12; --ok-bg:#DCEBDD; --bad-bg:#F6DCE1;
   --shadow:0 1px 0 rgba(19,48,42,.06),0 8px 24px -12px rgba(19,48,42,.28);
   --serif:"Iowan Old Style","Palatino Linotype",Palatino,"Book Antiqua","URW Palladio L","Noto Serif",Georgia,serif;
   --sans:system-ui,-apple-system,"Segoe UI",Roboto,"Noto Sans",sans-serif;
@@ -28,7 +28,7 @@
     --bg:#0E241F; --surface:#15322B; --surface-2:#1C3E35; --ink:#EDE4CF; --ink-2:#B9B29E; --ink-3:#8A8B7C;
     --brass:#D2A84E; --brass-soft:rgba(210,168,78,.16); --on-brass:#1E1708;
     --line:rgba(237,228,207,.13); --line-2:rgba(237,228,207,.24);
-    --ok:#86BD92; --ok-soft:rgba(134,189,146,.14); --bad:#E8768A; --bad-soft:rgba(232,118,138,.14); --warn:#E1B25B;
+    --ok:#86BD92; --ok-soft:rgba(134,189,146,.14); --bad:#E8768A; --bad-soft:rgba(232,118,138,.14); --warn:#E1B25B; --ok-bg:#1D3F2C; --bad-bg:#4A2129;
     --shadow:0 1px 0 rgba(0,0,0,.25),0 10px 30px -14px rgba(0,0,0,.7);
   }
 }
@@ -228,7 +228,7 @@ textarea{min-height:84px;resize:vertical}
 .glass-meter{display:flex;gap:18px;align-items:center}
 .glass-meter svg{width:130px;height:auto;flex:none}
 .glass-meter .big{font-family:var(--serif);font-size:44px;line-height:1}
-.stats{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin-top:16px}
+.stats{display:grid;grid-template-columns:repeat(2,1fr);gap:10px;margin-top:16px}
 .stat{background:var(--surface-2);border-radius:var(--r-s);padding:10px 12px}
 .stat b{display:block;font-family:var(--serif);font-size:24px;line-height:1.1}
 .stat span{font-size:12.5px;color:var(--ink-2)}
@@ -244,6 +244,94 @@ textarea{min-height:84px;resize:vertical}
 .limits{font-size:14.5px;color:var(--ink-2);padding-left:18px;margin:8px 0 0}
 .limits li{margin-bottom:6px}
 .sr{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0)}
+/* ---------- Parcours ---------- */
+.hud{display:flex;gap:10px;align-items:center;margin:0 0 6px}
+.pill{display:flex;align-items:center;gap:6px;padding:8px 14px;border-radius:999px;background:var(--surface);border:1px solid var(--line);font-weight:800;font-size:16px;flex:none}
+.pill svg{width:20px;height:20px}
+.pill.fire{color:#E0782F}
+.goal{background:var(--surface);border:1px solid var(--line);border-radius:999px;padding:7px 16px}
+.goal-top{display:flex;justify-content:space-between;gap:8px;font-size:13px;color:var(--ink-2)}
+.goal-top b{color:var(--ink)}
+.goal-bar{height:8px;border-radius:8px;background:var(--surface-2);margin-top:4px;overflow:hidden}
+.goal-bar span{display:block;height:100%;background:var(--brass);border-radius:8px}
+.welcome{margin-top:16px}
+.welcome h2{font-size:22px;margin-bottom:6px}
+.chapter{margin:28px 0 4px;border-radius:var(--r-l);padding:16px 18px;background:var(--surface);border:1px solid var(--line);display:flex;gap:12px;align-items:center}
+.chapter.cur{background:var(--brass);color:var(--on-brass);border-color:var(--brass)}
+.chapter.locked{opacity:.72}
+.chapter .ch-num{font-size:13px;opacity:.8}
+.chapter h2{font-size:22px;margin:2px 0}
+.chapter .ch-meta{font-size:14px;opacity:.85}
+.btn.small-btn{min-height:38px;font-size:13.5px;padding:0 14px;flex:none}
+.path{display:flex;flex-direction:column;align-items:center;gap:24px;padding:52px 0 10px}
+.node-wrap{position:relative;display:flex;flex-direction:column;align-items:center;gap:8px;transform:translateX(var(--x,0))}
+.node{position:relative;width:74px;height:74px;border-radius:50%;border:0;display:grid;place-items:center;background:var(--surface-2);color:var(--ink-3);
+  box-shadow:0 6px 0 color-mix(in srgb,var(--ink) 16%,transparent);transition:transform .08s}
+.node svg{width:36px;height:36px}
+.node.big{width:86px;height:86px}
+.node.done{background:var(--brass);color:var(--on-brass);box-shadow:0 6px 0 color-mix(in srgb,var(--brass) 55%,#000)}
+.node.open,.node.cur{background:var(--surface);color:var(--brass);border:3px solid var(--brass);box-shadow:0 6px 0 color-mix(in srgb,var(--brass) 55%,#000)}
+.node.cur{outline:4px solid var(--brass-soft);outline-offset:5px}
+.node:active{transform:translateY(5px);box-shadow:none}
+.node .check{position:absolute;right:-4px;bottom:-4px;width:26px;height:26px;border-radius:50%;background:var(--ok);color:var(--bg);display:grid;place-items:center;border:2px solid var(--bg)}
+.node .check svg{width:15px;height:15px}
+.node-label{font-family:var(--serif);font-weight:600;font-size:15px;text-align:center;max-width:150px;line-height:1.2}
+.node-wrap.locked .node-label{color:var(--ink-3)}
+.start-tag{position:absolute;top:-36px;left:50%;transform:translateX(-50%);background:var(--surface);border:2px solid var(--brass);color:var(--brass);font-weight:800;font-size:13px;padding:4px 12px;border-radius:12px;white-space:nowrap;animation:bob 1.6s ease-in-out infinite;z-index:1}
+@keyframes bob{50%{transform:translate(-50%,-5px)}}
+.done-card{margin-top:30px;text-align:center}
+
+/* ---------- Leçon ---------- */
+.lesson{min-height:100%;display:flex;flex-direction:column}
+.l-top{display:flex;align-items:center;gap:10px;padding:10px 14px;max-width:680px;margin:0 auto;width:100%}
+.l-bar{flex:1;height:14px;border-radius:14px;background:var(--surface-2);overflow:hidden}
+.l-bar span{display:block;height:100%;background:var(--brass);border-radius:14px;transition:width .35s ease}
+.l-body{flex:1;width:100%;max-width:680px;margin:0 auto;padding:14px 18px 190px}
+.l-kind{color:var(--brass);font-weight:800;font-size:14px}
+.l-title{font-size:25px;margin:6px 0 18px}
+.l-foot{position:fixed;left:0;right:0;bottom:0;z-index:5;padding:16px 18px calc(16px + env(safe-area-inset-bottom));border-top:1px solid var(--line);background:var(--bg)}
+.l-foot.fb-ok{background:var(--ok-bg);border-top-color:transparent}
+.l-foot.fb-ko{background:var(--bad-bg);border-top-color:transparent}
+.l-foot-in{max-width:680px;margin:0 auto;display:flex;flex-direction:column;gap:10px}
+.fb-title{font-weight:800;font-size:20px;display:flex;align-items:center;gap:8px}
+.fb-title svg{width:26px;height:26px}
+.fb-ok .fb-title{color:var(--ok)} .fb-ko .fb-title{color:var(--bad)}
+.fb-ans{font-size:15.5px}
+.btn.big{min-height:54px;border-radius:16px;font-size:16.5px;font-weight:800;border-width:2px;box-shadow:0 4px 0 var(--line-2)}
+.btn.big.primary{box-shadow:0 4px 0 color-mix(in srgb,var(--brass) 62%,#000)}
+.btn.big:active{transform:translateY(3px);box-shadow:none}
+.btn.ok-btn{background:var(--ok);border-color:var(--ok);color:var(--bg);box-shadow:0 4px 0 color-mix(in srgb,var(--ok) 60%,#000)}
+.btn.ko-btn{background:var(--bad);border-color:var(--bad);color:var(--bg);box-shadow:0 4px 0 color-mix(in srgb,var(--bad) 60%,#000)}
+.choices{display:flex;flex-direction:column;gap:12px}
+.choices.grid{display:grid;grid-template-columns:1fr 1fr}
+.choice,.tile{border:2px solid var(--line-2);background:var(--surface);border-radius:16px;box-shadow:0 3px 0 var(--line-2);font-size:16px}
+.choice{display:flex;align-items:center;gap:12px;text-align:left;width:100%;padding:14px 16px;min-height:58px}
+.choice .k{flex:none;width:26px;height:26px;border-radius:8px;border:2px solid var(--line-2);display:grid;place-items:center;font-size:12.5px;font-weight:700;color:var(--ink-3)}
+.choice .gi svg{width:40px;height:40px;color:var(--brass)}
+.choices.grid .choice{flex-direction:column;justify-content:center;text-align:center;min-height:124px;gap:8px;font-size:15px}
+.tiles{display:flex;flex-wrap:wrap;gap:10px}
+.tile{padding:10px 14px}
+.choice[aria-pressed="true"],.tile[aria-pressed="true"]{border-color:var(--brass);background:var(--brass-soft);box-shadow:0 3px 0 var(--brass)}
+.choice.right,.tile.right{border-color:var(--ok);background:var(--ok-soft);box-shadow:0 3px 0 var(--ok)}
+.choice.wrong,.tile.wrong{border-color:var(--bad);background:var(--bad-soft);box-shadow:0 3px 0 var(--bad)}
+.tile.missed{border-style:dashed;border-color:var(--ok);color:var(--ok)}
+.choice.dim{opacity:.5}
+.choice:disabled,.tile:disabled{cursor:default}
+.statement{font-size:18px;padding:16px 18px;border-radius:var(--r-m);background:var(--surface);border:1px solid var(--line);margin-bottom:16px;line-height:1.6}
+.statement .st-name{font-family:var(--serif);font-weight:700;font-size:22px}
+.build-row{padding:12px 0;border-bottom:1px solid var(--line)}
+.build-row .bn{font-weight:600;margin-bottom:8px}
+.doses{display:flex;gap:8px;flex-wrap:wrap}
+.tile.dose{min-width:74px;padding:8px 12px;font-variant-numeric:tabular-nums}
+.disc-hero{text-align:center;padding:16px 0 6px}
+.disc-hero svg{width:96px;height:96px;color:var(--brass)}
+.disc-name{font-size:40px;margin:8px 0 4px}
+.tip{margin-top:16px;padding:12px 14px;border-radius:var(--r-m);background:var(--brass-soft);font-size:15px}
+.peek{background:none;border:0;color:var(--brass);font-weight:700;padding:14px 0 0;font-size:15px;text-decoration:underline;text-underline-offset:3px}
+.end{text-align:center;display:flex;flex-direction:column;align-items:center;gap:10px;padding-top:44px}
+.end-icon svg{width:110px;height:110px;color:var(--brass)}
+.end-title{font-size:34px}
+.end-stats{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;width:100%;margin-top:18px}
 @media (prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}}
 </style>
 </head>
@@ -251,7 +339,8 @@ textarea{min-height:84px;resize:vertical}
 <div class="app">
   <main class="view" id="view" tabindex="-1"></main>
   <nav class="tabs" aria-label="Navigation principale">
-    <button class="tab" data-a="tab" data-tab="reviser"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M5 4h14l-7 8z"/><path d="M12 12v8M8 20h8"/></svg>Réviser</button>
+    <button class="tab" data-a="tab" data-tab="parcours"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M5 4h14l-7 8z"/><path d="M12 12v8M8 20h8"/></svg>Parcours</button>
+    <button class="tab" data-a="tab" data-tab="revision"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M4 12a8 8 0 0 1 14-5.3L20 9"/><path d="M20 4v5h-5M20 12a8 8 0 0 1-14 5.3L4 15"/><path d="M4 20v-5h5"/></svg>Révision</button>
     <button class="tab" data-a="tab" data-tab="recettes"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M5 4h11a3 3 0 0 1 3 3v13H8a3 3 0 0 1-3-3z"/><path d="M5 17a3 3 0 0 1 3-3h11M9 8h6"/></svg>Recettes</button>
     <button class="tab" data-a="tab" data-tab="progres"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M4 20V10M10 20V4M16 20v-7M22 20H2"/></svg>Progrès</button>
     <button class="tab" data-a="tab" data-tab="reglages"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.7 1.7 0 0 0 .3 1.8l.1.1a2 2 0 1 1-2.8 2.8l-.1-.1a1.7 1.7 0 0 0-1.8-.3 1.7 1.7 0 0 0-1 1.5V21a2 2 0 1 1-4 0v-.1a1.7 1.7 0 0 0-1.1-1.5 1.7 1.7 0 0 0-1.8.3l-.1.1a2 2 0 1 1-2.8-2.8l.1-.1a1.7 1.7 0 0 0 .3-1.8 1.7 1.7 0 0 0-1.5-1H3a2 2 0 1 1 0-4h.1a1.7 1.7 0 0 0 1.5-1.1 1.7 1.7 0 0 0-.3-1.8l-.1-.1a2 2 0 1 1 2.8-2.8l.1.1a1.7 1.7 0 0 0 1.8.3H9a1.7 1.7 0 0 0 1-1.5V3a2 2 0 1 1 4 0v.1a1.7 1.7 0 0 0 1 1.5 1.7 1.7 0 0 0 1.8-.3l.1-.1a2 2 0 1 1 2.8 2.8l-.1.1a1.7 1.7 0 0 0-.3 1.8V9a1.7 1.7 0 0 0 1.5 1H21a2 2 0 1 1 0 4h-.1a1.7 1.7 0 0 0-1.5 1z"/></svg>Réglages</button>
@@ -265,7 +354,7 @@ textarea{min-height:84px;resize:vertical}
 /* =========================================================
    1. Référentiels
    ========================================================= */
-const APP_VERSION = '1.0.0';
+const APP_VERSION = '2.0.0';
 const KEY = 'entraineur-barman-v1';
 const DAY = 864e5;
 
@@ -365,10 +454,29 @@ R('fernandito','Fernandito','N','Highball','Highball',T.CO,G.GL,'Aucune',[['Fern
 ];
 SEED.forEach((s,i)=>{s.rank=i});
 
+/* Chapitres du parcours : 5 cocktails liés par une logique commune */
+const CHAPTERS = [
+ ['ch01','Les sours de base','Alcool, citron, sucre : la structure qui revient partout.',['daiquiri','whiskey-sour','margarita','sidecar','white-lady']],
+ ['ch02','Les long drinks du comptoir','Les commandes que tu serviras le plus, souvent construites au verre.',['mojito','cuba-libre','moscow-mule','caipirinha','bloody-mary']],
+ ['ch03','La famille Negroni','Amers italiens et vermouth, souvent à parts égales.',['negroni','americano','boulevardier','spritz','paper-plane']],
+ ['ch04','Les grands classiques mélangés','Alcool fort et vermouth au verre à mélange, sans agrumes.',['old-fashioned','manhattan','dry-martini','martinez','vesper']],
+ ['ch05','Les stars modernes','Les créations récentes que tout le monde commande.',['cosmopolitan','espresso-martini','tommys-margarita','penicillin','lemon-drop']],
+ ['ch06','Bulles et vin','Champagne, prosecco et vin blanc en vedette.',['french-75','bellini','mimosa','kir','champagne-cocktail']],
+ ['ch07','Tiki et tropical','Rhum, fruits exotiques et sirops.',['mai-tai','pina-colada','singapore-sling','mary-pickford','hemingway-special']],
+ ['ch08','Fizz, Collins et blanc d’œuf','Des sours allongés au soda ou rendus mousseux par l’œuf.',['gin-fizz','john-collins','pisco-sour','clover-club','ramos-gin-fizz']],
+ ['ch09','Les highballs','Un alcool, un allongeur, beaucoup de glace.',['tequila-sunrise','sex-on-the-beach','sea-breeze','paloma','dark-n-stormy']],
+ ['ch10','Sours aromatiques','Herbes, fruits rouges et liqueurs.',['mint-julep','southside','bramble','aviation','last-word']],
+ ['ch11','Les duos digestifs','Deux ingrédients, souvent construits sur glace.',['black-russian','rusty-nail','godfather','french-connection','stinger']],
+ ['ch12','Crème, œuf et café','Les cocktails de fin de repas.',['alexander','grasshopper','golden-dream','porto-flip','irish-coffee']],
+ ['ch13','La Nouvelle-Orléans','Absinthe, bitters et cognac : les ancêtres.',['sazerac','vieux-carre','brandy-crusta','hanky-panky','corpse-reviver-2']],
+ ['ch14','Les classiques du Savoy','Recettes anciennes au gin, souvent fruitées.',['casino','tuxedo','monkey-gland','paradise','angel-face']],
+ ['ch15','Pour finir le service','Les derniers classiques IBA à connaître.',['between-the-sheets','horses-neck','russian-spring-punch','long-island','fernandito']]
+].map(([id,title,desc,ids])=>({id,title,desc,ids:ids.map(x=>'iba-'+x)}));
+
 /* =========================================================
    3. Stockage
    ========================================================= */
-const DEFAULT_SETTINGS = {unit:'cl', timer:20, len:10, newPerDay:5, format:'mix', types:['spec','dose','verre','technique','garniture'], schoolStart:'2026-11-09', schoolEnd:'2026-12-04', updatedAt:0};
+const DEFAULT_SETTINGS = {unit:'cl', timer:20, len:10, newPerDay:5, dailyGoal:20, sound:true, unlockAll:false, format:'mix', types:['spec','dose','verre','technique','garniture'], schoolStart:'2026-11-09', schoolEnd:'2026-12-04', updatedAt:0};
 const fromSeed = s => ({...JSON.parse(JSON.stringify(s)), fav:false, week:false, custom:false, edited:false, deleted:false, updatedAt:0});
 let S = load();
 
@@ -385,6 +493,8 @@ function migrate(d){
   d.settings = Object.assign({}, DEFAULT_SETTINGS, d.settings||{});
   d.sel = d.sel || {k:'tous'};
   d.newDay = d.newDay || {d:'', n:0};
+  d.learn = d.learn || {}; d.learn.lessons = d.learn.lessons || {}; d.learn.chapters = d.learn.chapters || {};
+  d.xp = d.xp || {total:0, byDay:{}}; d.xp.byDay = d.xp.byDay || {};
   const ids = new Set(d.cocktails.map(c=>c.id));
   SEED.forEach(s=>{ if(!ids.has(s.id)) d.cocktails.push(fromSeed(s)); });
   return d;
@@ -550,22 +660,21 @@ function pool(sel=S.sel){
 }
 const selLabel = () => S.sel.k==='famille' ? 'Famille '+(S.sel.fam||'') : (SELS.find(s=>s[0]===S.sel.k)||SELS[0])[1];
 function reviewQueue(){
-  const L=pool();
-  const due=L.filter(c=>isDue(c.id)).sort((a,b)=>P(a.id).due-P(b.id).due).map(c=>c.id);
-  const nw=L.filter(c=>isNew(c.id)).slice(0,newLeft()).map(c=>c.id);
-  return [...due.slice(0,60), ...nw];
+  return pool().filter(c=>lessonDone(c.id) && isDue(c.id)).sort((a,b)=>P(a.id).due-P(b.id).due).slice(0,20).map(c=>c.id);
 }
 
 /* =========================================================
    7. Rendu des onglets
    ========================================================= */
-let TAB = 'reviser';
-function setTab(t){ TAB=t; renderTab(); try{ window.scrollTo(0,0); }catch(e){} }
+let TAB = 'parcours';
+let WANT_SCROLL = true;
+function setTab(t){ TAB=t; if(t==='parcours') WANT_SCROLL=true; renderTab(); try{ window.scrollTo(0,0); }catch(e){} }
 function renderTab(){
   document.querySelectorAll('.tab').forEach(b=>b.setAttribute('aria-current', b.dataset.tab===TAB ? 'page':'false'));
   const v=$('#view');
-  v.innerHTML = TAB==='reviser'? viewReviser() : TAB==='recettes'? viewRecettes() : TAB==='progres'? viewProgres() : viewReglages();
+  v.innerHTML = TAB==='parcours'? viewParcours() : TAB==='revision'? viewRevision() : TAB==='recettes'? viewRecettes() : TAB==='progres'? viewProgres() : viewReglages();
   if(TAB==='recettes') bindRecettes();
+  if(TAB==='parcours' && WANT_SCROLL){ WANT_SCROLL=false; const n=$('#curNode'); if(n && n.scrollIntoView) setTimeout(()=>n.scrollIntoView({block:'center'}),30); }
 }
 
 function schoolLine(){
@@ -583,24 +692,26 @@ function selChips(){
   ${S.sel.k==='famille'? `<select id="famSel" aria-label="Choisir une famille" style="margin-top:8px">${fams.map(f=>`<option ${S.sel.fam===f?'selected':''}>${esc(f)}</option>`).join('')}</select>`:''}`;
 }
 
-function viewReviser(){
-  const q=reviewQueue(), L=pool();
-  const due=q.filter(id=>!isNew(id)).length, nw=q.length-due;
-  const st=streak();
-  const head = q.length
-    ? `<p class="label">Au programme aujourd’hui</p><p class="count num">${q.length}<small>${q.length>1?'cocktails':'cocktail'}</small></p>
-       <p class="sub">${[due? plural(due,'révision due','révisions dues'):'', nw? plural(nw,'nouveau cocktail à découvrir','nouveaux cocktails à découvrir'):''].filter(Boolean).join(' et ')}</p>
-       <button class="btn primary block" data-a="startReview">Commencer la révision du jour</button>`
-    : `<p class="label">Au programme aujourd’hui</p><p class="count">Service terminé</p>
-       <p class="sub">${L.length? 'Tout est révisé dans cette sélection. Lance un quiz pour t’entraîner encore, ou augmente le nombre de nouveaux cocktails par jour dans les réglages.' : 'Cette sélection est vide. Choisis-en une autre ci-dessous.'}</p>`;
-  return `<h1 class="page-title">Réviser</h1>
+function viewRevision(){
+  const all=live(), learned=all.filter(c=>lessonDone(c.id)).length;
+  const q=reviewQueue(), L=pool(), st=streak();
+  let head;
+  if(!learned) head=`<p class="label">Révision espacée</p><p class="count">Rien à réviser</p>
+    <p class="sub">Un cocktail arrive ici dès que tu termines sa leçon dans le Parcours.</p>
+    <button class="btn primary block" data-a="tab" data-tab="parcours">Aller au Parcours</button>`;
+  else if(q.length) head=`<p class="label">À réviser aujourd’hui</p><p class="count num">${q.length}<small>${q.length>1?'cocktails':'cocktail'}</small></p>
+    <p class="sub">Ceux que tu rates reviennent vite, ceux que tu maîtrises s’espacent.</p>
+    <button class="btn primary block" data-a="startReview">Commencer la révision</button>`;
+  else head=`<p class="label">À réviser aujourd’hui</p><p class="count">À jour</p>
+    <p class="sub">${L.some(c=>lessonDone(c.id))?'Aucune révision due dans cette sélection. Avance dans le Parcours ou lance un quiz.':'Aucun cocktail appris dans cette sélection.'}</p>`;
+  return `<h1 class="page-title">Révision</h1>
   <div class="service">${head}
-    <div class="ribbon"><span>Série : <b>${plural(st,'jour')}</b></span><span>Maîtrise : <b>${globalMastery()} %</b></span>${schoolLine()}</div>
+    <div class="ribbon"><span>Série : <b>${plural(st,'jour')}</b></span><span>Appris : <b>${learned} / ${all.length}</b></span>${schoolLine()}</div>
   </div>
-  <div class="section"><h2>Sélection</h2>${selChips()}<p class="tiny" style="margin-top:6px">${plural(L.length,'cocktail')} dans « ${esc(selLabel())} ». Elle s’applique à la révision du jour, au quiz et aux flashcards.</p></div>
+  <div class="section"><h2>Sélection</h2>${selChips()}<p class="tiny" style="margin-top:6px">${plural(L.length,'cocktail')} dans « ${esc(selLabel())} ». La révision et le quiz prennent les cocktails déjà appris, les flashcards toute la sélection.</p></div>
   <div class="section"><h2>S’entraîner</h2>
     <div class="modes">
-      <button class="mode" data-a="quizSetup">${I.timer}<b>Quiz chronométré</b><span>QCM ou carte à retourner, sur les doses, le verre, la technique et la garniture.</span></button>
+      <button class="mode" data-a="quizSetup">${I.timer}<b>Quiz chronométré</b><span>Sur les cocktails appris : doses, verre, technique, garniture.</span></button>
       <button class="mode" data-a="startFlash">${I.cards}<b>Flashcards</b><span>Retourne les fiches à ton rythme, sans note ni chrono.</span></button>
     </div>
   </div>`;
@@ -672,12 +783,13 @@ function viewProgres(){
         <path d="M14 22c0 34 28 52 66 52s66-18 66-52z" fill="none" stroke="var(--ink)" stroke-width="2.4" stroke-linejoin="round"/>
         <path d="M80 74v56M54 132h52" stroke="var(--ink)" stroke-width="2.4" stroke-linecap="round"/>
       </svg>
-      <div><p class="big num">${g} %</p><p class="muted">de maîtrise sur ${plural(L.length,'cocktail')}</p></div>
+      <div><p class="big num">${g} %</p><p class="muted">de maîtrise sur ${plural(L.length,'cocktail')}, dont ${mastered} à 80 % et plus</p></div>
     </div>
     <div class="stats">
       <div class="stat"><b class="num">${streak()}</b><span>jours de série</span></div>
-      <div class="stat"><b class="num">${seen}</b><span>cocktails vus</span></div>
-      <div class="stat"><b class="num">${mastered}</b><span>maîtrisés (80 % et +)</span></div>
+      <div class="stat"><b class="num">${S.xp.total}</b><span>XP au total</span></div>
+      <div class="stat"><b class="num">${L.filter(c=>lessonDone(c.id)).length} / ${L.length}</b><span>cocktails appris</span></div>
+      <div class="stat"><b class="num">${chapters().filter(chPassed).length} / ${chapters().length}</b><span>chapitres validés</span></div>
     </div>
     <p class="tiny" style="margin-top:14px">Tes 14 derniers jours de révision</p>
     <div class="days">${days}</div>
@@ -702,7 +814,9 @@ function viewReglages(){
     <div class="set-row"><span class="lbl">Unité des doses</span>${seg('unit',[['cl','cl'],['ml','ml'],['oz','oz']],s.unit)}<span class="desc">Les recettes sont stockées en ml. 1 oz est arrondi à 30 ml, la convention des bars.</span></div>
     <div class="set-row"><span class="lbl">Chrono du quiz</span>${seg('timer',[[0,'Sans'],[10,'10 s'],[15,'15 s'],[20,'20 s'],[30,'30 s']],s.timer)}<span class="desc">Les questions « recette complète » ont le double du temps.</span></div>
     <div class="set-row"><span class="lbl">Questions par quiz</span>${seg('len',[[10,'10'],[20,'20'],[30,'30']],s.len)}</div>
-    <div class="set-row"><span class="lbl">Nouveaux cocktails par jour</span>${seg('newPerDay',[[0,'0'],[3,'3'],[5,'5'],[10,'10'],[20,'20']],s.newPerDay)}<span class="desc">Nombre de cocktails jamais vus ajoutés à la révision du jour. Les indispensables passent en premier.</span></div>
+    <div class="set-row"><span class="lbl">Objectif du jour</span>${seg('dailyGoal',[[10,'10 XP'],[20,'20 XP'],[30,'30 XP'],[50,'50 XP']],s.dailyGoal)}<span class="desc">Une leçon rapporte 10 XP, 15 sans faute. Une révision de chapitre réussie rapporte 20 XP.</span></div>
+    <div class="set-row"><span class="lbl">Sons</span>${seg('sound',[[1,'Activés'],[0,'Coupés']],s.sound?1:0)}</div>
+    <div class="set-row"><span class="lbl">Débloquer tout le parcours</span>${seg('unlockAll',[[0,'Non'],[1,'Oui']],s.unlockAll?1:0)}<span class="desc">Utile si l’école te demande des cocktails d’un chapitre plus loin. Tu peux aussi ouvrir n’importe quelle fiche et toucher « Apprendre ».</span></div>
     <div class="set-row"><span class="lbl">Dates de la formation</span>
       <div class="row"><label class="grow field" style="margin:0"><span>Début</span><input type="date" id="sStart" value="${esc(s.schoolStart)}"></label><label class="grow field" style="margin:0"><span>Fin</span><input type="date" id="sEnd" value="${esc(s.schoolEnd)}"></label></div>
       <span class="desc">Affiche le compte à rebours, puis la semaine en cours, sur l’écran Réviser.</span></div>
@@ -718,7 +832,7 @@ function viewReglages(){
   <div class="section"><h2>Recettes et progression</h2>
     <div class="settings-group">
       <div class="set-row"><span class="lbl">Restaurer les recettes IBA supprimées</span><span class="desc">${tomb? plural(tomb,'recette IBA supprimée','recettes IBA supprimées')+'. Tes fiches modifiées ne sont pas touchées.':'Aucune recette IBA supprimée.'}</span><button class="btn" data-a="restore" ${tomb?'':'disabled'}>Restaurer</button></div>
-      <div class="set-row"><span class="lbl">Remettre la progression à zéro</span><span class="desc">Efface les notes, la révision espacée et la série. Les recettes restent.</span><button class="btn danger" data-a="resetProgress">Remettre à zéro</button></div>
+      <div class="set-row"><span class="lbl">Remettre la progression à zéro</span><span class="desc">Efface les leçons, les chapitres validés, l’XP, la révision espacée et la série. Les recettes restent.</span><button class="btn danger" data-a="resetProgress">Remettre à zéro</button></div>
       <div class="set-row"><span class="lbl">Tout effacer sur cet appareil</span><span class="desc">Recettes, progression et réglages. Exporte d’abord si tu veux garder quelque chose.</span><button class="btn danger" data-a="wipe">Tout effacer</button></div>
     </div>
   </div>
@@ -791,7 +905,7 @@ function openDetail(id){
           <div class="toggle-row"><button class="btn" data-a="week" data-id="${id}" aria-pressed="${!!c.week}">${I.cal}${c.week?'Dans la semaine à l’école':'Semaine à l’école'}</button></div>
           <div class="progress-line"><span class="mbar ${m>=80?'ok':m<50&&!isNew(id)?'bad':''}"><span style="width:${m}%"></span></span><span>Maîtrise ${m} % · ${esc(dueLabel(id))}</span></div>
           <div class="actions">
-            <button class="btn primary" data-a="drill" data-id="${id}">${I.repeat}Me tester</button>
+            <button class="btn primary" data-a="learnOne" data-id="${id}">${I.repeat}${lessonDone(id)?'Refaire la leçon':'Apprendre'}</button>
             <button class="btn" data-a="edit" data-id="${id}">${I.edit}Modifier</button>
             ${seed && c.edited?`<button class="btn ghost" data-a="revert" data-id="${id}">Revenir à la spec IBA</button>`:''}
             <button class="btn danger" data-a="del" data-id="${id}">${I.trash}Supprimer</button>
@@ -1045,7 +1159,7 @@ function flashMove(d){
 /* Configuration du quiz */
 function openQuizSetup(ids){
   const st={types:[...S.settings.types], format:S.settings.format};
-  const L=ids? ids.map(byId).filter(Boolean) : pool();
+  const L=ids? ids.map(byId).filter(Boolean) : pool().filter(c=>lessonDone(c.id));
   openLayer('sheet', el=>{
     const draw=()=>{
       el.innerHTML=`<div class="sheet-in"><div class="sheet-head"><button class="icon-btn" data-a="close" aria-label="Fermer">${I.x}</button><span class="t">Quiz chronométré</span><span style="width:44px"></span></div>
@@ -1063,10 +1177,295 @@ function openQuizSetup(ids){
 }
 
 /* =========================================================
+   10 bis. Parcours façon Duolingo
+   ========================================================= */
+Object.assign(I,{
+  flame:'<svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M12 2.5c.9 3.6 5.5 5.6 5.5 10.6a5.5 5.5 0 0 1-11 0c0-2.4 1.2-4 2.6-5 .2 1.8 1 2.8 2.2 3.2 0-3.4-.6-6.1.7-8.8z"/></svg>',
+  trophy:svg('<path d="M8 4h8v5a4 4 0 0 1-8 0z"/><path d="M8 6H5a3 3 0 0 0 3.2 4M16 6h3a3 3 0 0 1-3.2 4M12 13v4M8.5 20.5h7M10 17h4v3.5h-4z"/>'),
+  check:svg('<path d="M5 12.5l4.5 4.5L19 7.5"/>',2.8)
+});
+const lessonDone = id => !!S.learn.lessons[id];
+const chPassed = ch => !!S.learn.chapters[ch.id];
+function chapters(){
+  const L=live(), have=new Set(L.map(c=>c.id)), used=new Set(), out=[];
+  CHAPTERS.forEach(ch=>{ const ids=ch.ids.filter(id=>have.has(id)); ids.forEach(id=>used.add(id)); if(ids.length) out.push({...ch, ids}); });
+  const rest=L.filter(c=>!used.has(c.id));
+  for(let i=0;i<rest.length;i+=5){
+    const n=i/5+1;
+    out.push({id:'perso-'+n, title: rest.length>5?`Mes recettes ${n}`:'Mes recettes', desc:'Tes recettes ajoutées, à apprendre comme les autres.', ids:rest.slice(i,i+5).map(c=>c.id), perso:true});
+  }
+  return out;
+}
+function chUnlocked(chs,k){ return S.settings.unlockAll || k===0 || chs[k].perso || chPassed(chs[k-1]) || chs[k].ids.some(lessonDone); }
+function currentNode(chs){
+  for(let k=0;k<chs.length;k++){
+    if(!chUnlocked(chs,k) || chPassed(chs[k])) continue;
+    const j=chs[k].ids.findIndex(id=>!lessonDone(id));
+    return {k, j: j<0 ? chs[k].ids.length : j};
+  }
+  return null;
+}
+function addXP(n){ S.xp.total+=n; const k=dkey(); S.xp.byDay[k]=(S.xp.byDay[k]||0)+n; if(!S.days.includes(k)) S.days.push(k); save(); }
+
+const XS=[0,56,82,56,0,-56,-82,-56];
+function nodeHTML(o){
+  return `<div class="node-wrap ${o.cls==='locked'?'locked':''}" style="--x:${o.x}px">${o.cur?'<span class="start-tag">Commencer</span>':''}
+    <button class="node ${o.cls} ${o.big?'big':''}" ${o.attrs} aria-label="${esc(o.label)}" ${o.cur?'id="curNode"':''}>${o.icon}${o.check?`<span class="check">${I.check}</span>`:''}</button>
+    <span class="node-label">${esc(o.label)}</span></div>`;
+}
+function viewParcours(){
+  const chs=chapters(), cur=currentNode(chs);
+  const today=S.xp.byDay[dkey()]||0, goal=S.settings.dailyGoal||20, pct=Math.min(100,Math.round(today/goal*100));
+  const anyLearned=live().some(c=>lessonDone(c.id));
+  let h=`<h1 class="sr">Parcours</h1><div class="hud">
+    <span class="pill fire" title="Série de jours">${I.flame}<span class="num">${streak()}</span></span>
+    <div class="goal grow"><div class="goal-top"><span>Objectif du jour</span><b class="num">${today} / ${goal} XP</b></div><div class="goal-bar"><span style="width:${pct}%"></span></div></div>
+  </div>`;
+  if(!anyLearned) h+=`<div class="card welcome"><h2>Bienvenue au comptoir</h2><p class="muted">Chaque chapitre t’apprend 5 cocktails. Une leçon te montre la fiche, puis tu t’entraînes jusqu’à la retenir. Le chapitre se termine par une révision des 5 : réussis-la pour débloquer la suite.</p></div>`;
+  let gi=0;
+  chs.forEach((ch,k)=>{
+    const un=chUnlocked(chs,k), passed=chPassed(ch), doneN=ch.ids.filter(lessonDone).length, isCur=!!cur && cur.k===k;
+    h+=`<section><div class="chapter ${isCur?'cur':''} ${un?'':'locked'}">
+      <div class="grow"><p class="ch-num">${ch.perso?'Tes recettes':'Chapitre '+(k+1)}, ${doneN} sur ${ch.ids.length} appris${passed?', validé':''}</p><h2>${esc(ch.title)}</h2><p class="ch-meta">${esc(ch.desc||'')}</p></div>
+      ${un?'':`<button class="btn small-btn" data-a="chTest" data-ch="${k}">Passer le test</button>`}
+    </div><div class="path">`;
+    ch.ids.forEach((id,j)=>{
+      const c=byId(id), done=lessonDone(id), open=un && (S.settings.unlockAll || j===0 || done || lessonDone(ch.ids[j-1])), isC=isCur && cur.j===j;
+      h+=nodeHTML({x:XS[gi++%XS.length], cls: done?'done': isC?'cur': open?'open':'locked', icon:glassIcon(c.glass), label:c.name, cur:isC, check:done,
+        attrs:`data-a="node" data-id="${id}" data-st="${done?'done':open?'open':'locked'}"`});
+    });
+    const allDone=ch.ids.every(lessonDone), isR=isCur && cur.j===ch.ids.length;
+    h+=nodeHTML({x:XS[gi++%XS.length], big:true, cls: passed?'done': isR?'cur': (allDone&&un)?'open':'locked', icon:I.trophy, label:'Révision du chapitre', cur:isR, check:passed,
+      attrs:`data-a="chReview" data-ch="${k}" data-st="${allDone&&un?'open':'locked'}"`});
+    h+=`</div></section>`;
+  });
+  if(!cur && chs.length && chs.every(chPassed)) h+=`<div class="card done-card"><h2>Parcours terminé</h2><p class="muted">Tous les chapitres sont validés. La révision espacée garde tes specs en tête.</p></div>`;
+  return h;
+}
+function openNodeSheet(id){
+  const c=byId(id);
+  openLayer('sheet', el=>{
+    el.innerHTML=`<div class="sheet-in"><div class="sheet-head"><button class="icon-btn" data-a="close" aria-label="Fermer">${I.x}</button><span class="t">Leçon terminée</span><span style="width:44px"></span></div>
+    <div class="sheet-body"><div class="disc-hero">${glassIcon(c.glass)}<h2 class="disc-name">${esc(c.name)}</h2><p class="muted">Maîtrise ${mastery(id)} %. ${esc(dueLabel(id))}.</p></div>
+    <div class="actions" style="flex-direction:column"><button class="btn primary big block" data-a="learnOne" data-id="${id}" data-replace="1">Refaire la leçon</button><button class="btn big block" data-a="open" data-id="${id}">Voir la fiche</button></div></div></div>`;
+  });
+}
+
+/* --- Générateurs d’exercices --- */
+const mlIngs = c => c.ing.filter(i=>i.u==='ml'&&i.q>0);
+function textOpts(correct, pool, icons){
+  const others=shuffle([...new Set(pool)].filter(x=>x && norm(x)!==norm(correct))).slice(0,3);
+  return shuffle([correct,...others]).map(v=>({v, html:esc(v), correct:v===correct, icon: icons? glassIcon(v):''}));
+}
+function doseOpts(q){
+  const near=DOSES.filter(d=>d!==q).sort((a,b)=>Math.abs(a-q)-Math.abs(b-q)).slice(0,5);
+  const labels=new Set([fmtMl(q)]), out=[q];
+  shuffle(near).forEach(d=>{ const l=fmtMl(d); if(out.length<4 && !labels.has(l)){ labels.add(l); out.push(d); } });
+  return shuffle(out);
+}
+function mkGlass(c){ return {ex:true,type:'qcm',grid:true,id:c.id,kind:'Le verre',title:`Dans quel verre sert-on le ${c.name} ?`,opts:textOpts(c.glass,[...GLASSES,...live().map(x=>x.glass)],true),answer:c.glass}; }
+function mkTech(c){ return {ex:true,type:'qcm',id:c.id,kind:'La technique',title:`Comment prépare-t-on le ${c.name} ?`,opts:textOpts(c.tech,[...TECHS,...live().map(x=>x.tech)]),answer:c.tech}; }
+function mkGarn(c){ return {ex:true,type:'qcm',id:c.id,kind:'La garniture',title:`Quelle garniture pour le ${c.name} ?`,opts:textOpts(c.garnish,live().map(x=>x.garnish).filter(g=>g&&!/^aucune/i.test(g))),answer:c.garnish}; }
+function mkDose(c){
+  const ing=pick(mlIngs(c));
+  return {ex:true,type:'qcm',id:c.id,kind:'La dose',title:`${ing.n} : quelle dose dans le ${c.name} ?`,opts:doseOpts(ing.q).map(d=>({html:esc(fmtMl(d)),correct:d===ing.q})),answer:`${ing.n} ${fmtMl(ing.q)}`};
+}
+function mkTF(c){
+  const [lab,val,list]=pick([['Technique',c.tech,TECHS],['Verre',c.glass,GLASSES],['Glace',c.ice,ICES]]);
+  const alts=list.filter(x=>norm(x)!==norm(val)); const truth=!alts.length || Math.random()<.5;
+  const shown= truth? val : pick(alts);
+  return {ex:true,type:'qcm',id:c.id,kind:'Vrai ou faux',title:'Cette affirmation est-elle juste ?',
+    statement:`<span class="st-name">${esc(c.name)}</span><br>${lab} : ${esc(shown)}`,
+    opts:[{html:'Vrai',correct:truth},{html:'Faux',correct:!truth}], answer:`${truth?'Vrai':'Faux'}. ${lab} : ${val}`};
+}
+function mkTiles(c){
+  const correct=[...new Set(c.ing.map(i=>i.n))], cn=correct.map(norm);
+  const okD=n=>{ const x=norm(n); return !cn.some(y=>y.includes(x)||x.includes(y)); };
+  const fam=live().filter(x=>x.fam===c.fam && x.id!==c.id).flatMap(x=>x.ing.map(i=>i.n));
+  const all=live().filter(x=>x.id!==c.id).flatMap(x=>x.ing.map(i=>i.n));
+  const nD=Math.max(3, Math.min(5, 9-correct.length));
+  const ds=[...new Set([...shuffle(fam),...shuffle(all)])].filter(okD).slice(0,nD);
+  return {ex:true,type:'tiles',id:c.id,kind:'Les ingrédients',title:`Qu’y a-t-il dans le ${c.name} ?`,opts:shuffle([...correct,...ds]),correct:new Set(correct),answer:correct.join(', ')};
+}
+function mkBuild(c){
+  return {ex:true,type:'build',id:c.id,kind:'La recette complète',title:`Dose chaque ingrédient du ${c.name}`,
+    items:c.ing.map(i=> i.u==='ml'&&i.q>0 ? {n:i.n,q:i.q,opts:doseOpts(i.q)} : {n:i.n,fixed:fmtQ(i)}),
+    answer:mlIngs(c).map(i=>`${i.n} ${fmtMl(i.q)}`).join(', ')};
+}
+function mkWhich(c, prefer){
+  const others=[...shuffle((prefer||[]).filter(x=>x.id!==c.id))];
+  shuffle(live().filter(x=>x.id!==c.id && !others.includes(x))).forEach(x=>{ if(others.length<3) others.push(x); });
+  const opts=shuffle([c,...others.slice(0,3)]).map(x=>({html:esc(x.name),correct:x.id===c.id}));
+  return {ex:true,type:'qcm',id:c.id,kind:'Reconnais le cocktail',title:'Quel cocktail correspond à cette recette ?',
+    statement:c.ing.map(i=>`${esc(i.n)} <b>${esc(fmtQ(i))}</b>`).join('<br>')+`<br><span class="muted small">${esc(c.glass)}, ${esc(c.tech.toLowerCase())}</span>`, opts, answer:c.name};
+}
+function learnSteps(c){
+  const ex=[mkGlass(c), mkTiles(c)];
+  if(mlIngs(c).length) ex.push(mkDose(c));
+  ex.push(mkTech(c), mkTF(c));
+  if(applicable(c,'garniture')) ex.push(mkGarn(c));
+  ex.push(mlIngs(c).length>=2 ? mkBuild(c) : mkTiles(c));
+  return [{type:'intro',id:c.id},{type:'ingr',id:c.id},{type:'service',id:c.id}, ...ex];
+}
+function chapterSteps(ids){
+  const cs=ids.map(byId).filter(c=>c&&!c.deleted), out=[];
+  cs.forEach(c=>{
+    out.push(mlIngs(c).length>=2 ? mkBuild(c) : mkTiles(c));
+    out.push(pick([mkGlass, mkTech, x=>applicable(x,'garniture')?mkGarn(x):mkTF(x)])(c));
+  });
+  shuffle(cs).slice(0, Math.min(3, cs.length)).forEach(c=>out.push(mkWhich(c,cs)));
+  return shuffle(out);
+}
+function reviewSteps(ids){
+  const cs=ids.map(byId).filter(c=>c&&!c.deleted);
+  return shuffle(cs.map(c=>{
+    const g=[mkTiles, mkGlass, mkTech, x=>mkWhich(x,cs)];
+    if(mlIngs(c).length) g.push(mkDose);
+    if(mlIngs(c).length>=2) g.push(mkBuild, mkBuild);
+    return pick(g)(c);
+  }));
+}
+
+/* --- Sons --- */
+let AC=null;
+function sound(kind){
+  if(!S.settings.sound) return;
+  try{
+    AC=AC||new (window.AudioContext||window.webkitAudioContext)();
+    const t=AC.currentTime;
+    const notes = kind==='ok'? [[660,0],[880,.09]] : kind==='ko'? [[220,0],[175,.12]] : [[523,0],[659,.12],[784,.24],[1047,.36]];
+    notes.forEach(([f,d])=>{
+      const o=AC.createOscillator(), g=AC.createGain();
+      o.type= kind==='ko'?'triangle':'sine'; o.frequency.value=f;
+      g.gain.setValueAtTime(.0001,t+d); g.gain.exponentialRampToValueAtTime(.16,t+d+.01); g.gain.exponentialRampToValueAtTime(.0001,t+d+.22);
+      o.connect(g); g.connect(AC.destination); o.start(t+d); o.stop(t+d+.25);
+    });
+  }catch(e){}
+}
+
+/* --- Déroulé d’une leçon --- */
+let LS=null;
+const PRAISE=['Bien joué !','Exact !','Parfait !','Bonne mémoire !','Impeccable !','Tu l’as !'];
+function startLesson(mode, ids, meta={}){
+  ids=ids.filter(id=>{const c=byId(id); return c && !c.deleted;});
+  if(!ids.length){ toast('Aucun cocktail à travailler ici'); return; }
+  const steps = mode==='learn'? learnSteps(byId(ids[0])) : mode==='review'? reviewSteps(ids) : chapterSteps(ids);
+  const ses={mode, ids, meta, steps, i:0, sel:null, checked:null, first:{}, nEx:0, nOk:0, finished:false};
+  openLayer('lesson', el=>{ LS=ses; LS.el=el; drawLesson(); }, ()=>{ if(LS===ses) LS=null; }, !!meta.replace);
+}
+function ready(st){
+  if(st.type==='qcm') return LS.sel!=null;
+  if(st.type==='tiles') return !!LS.sel && LS.sel.size>0;
+  if(st.type==='build') return st.items.every((it,k)=>it.fixed || (LS.sel && LS.sel[k]!=null));
+  return true;
+}
+function exBody(st){
+  const ck=LS.checked;
+  if(st.type==='qcm') return `${st.statement?`<div class="statement">${st.statement}</div>`:''}<div class="choices ${st.grid?'grid':''}">${st.opts.map((o,i)=>{
+      const cls = ck ? (o.correct?'right': i===LS.sel?'wrong':'dim') : '';
+      return `<button class="choice ${cls}" data-a="lsel" data-i="${i}" aria-pressed="${LS.sel===i}" ${ck?'disabled':''}>${o.icon?`<span class="gi">${o.icon}</span>`:`<span class="k">${i+1}</span>`}<span>${o.html}</span></button>`;
+    }).join('')}</div>`;
+  if(st.type==='tiles'){
+    const sel=LS.sel||new Set();
+    return `<p class="small muted" style="margin:-8px 0 14px">Touche tous les bons ingrédients, puis vérifie.</p><div class="tiles">${st.opts.map((n,i)=>{
+      const on=sel.has(i), good=st.correct.has(n);
+      const cls = ck ? (on&&good?'right': on?'wrong': good?'missed':'') : '';
+      return `<button class="tile ${cls}" data-a="ltile" data-i="${i}" aria-pressed="${on}" ${ck?'disabled':''}>${esc(n)}</button>`;
+    }).join('')}</div>`;
+  }
+  return st.items.map((it,k)=> it.fixed
+    ? `<div class="build-row"><div class="ing-line"><span class="ing-n">${esc(it.n)}</span><span class="lead"></span><span class="ing-q">${esc(it.fixed)}</span></div></div>`
+    : `<div class="build-row"><p class="bn">${esc(it.n)}</p><div class="doses">${it.opts.map(d=>{
+        const on=!!LS.sel && LS.sel[k]===d;
+        const cls = ck ? (d===it.q ? (on?'right':'missed') : on?'wrong':'') : '';
+        return `<button class="tile dose ${cls}" data-a="ldose" data-r="${k}" data-v="${d}" aria-pressed="${on}" ${ck?'disabled':''}>${esc(fmtMl(d))}</button>`;
+      }).join('')}</div></div>`).join('');
+}
+function drawLesson(){
+  const st=LS.steps[LS.i], c=byId(st.id), prog=Math.round(LS.i/LS.steps.length*100);
+  let body, foot;
+  if(st.type==='intro') body=`<p class="l-kind">Nouveau cocktail</p><div class="disc-hero">${glassIcon(c.glass)}<h2 class="disc-name">${esc(c.name)}</h2><p class="muted">${esc(CATS[c.cat]||'')}${c.fam?', '+esc(c.fam):''}</p></div>${c.note?`<p class="note">${esc(c.note)}</p>`:''}`;
+  else if(st.type==='ingr'){ const r=ratioStr(c); body=`<p class="l-kind">La recette</p><h2 class="l-title">Ce qu’il y a dans le ${esc(c.name)}</h2><div class="card">${specHTML(c)}</div>${r?`<p class="tip">Astuce : retiens le ratio <b>${r}</b>. Les barres montrent les proportions.</p>`:''}`; }
+  else if(st.type==='service') body=`<p class="l-kind">Le service</p><h2 class="l-title">Comment on le sert</h2>${factsHTML(c)}<p class="tip">Lis bien tout : les exercices arrivent juste après.</p>`;
+  else body=`<p class="l-kind">${esc(st.kind)}${st.tries?', on y revient':''}</p><h2 class="l-title">${esc(st.title)}</h2>${exBody(st)}${LS.mode==='learn'&&!LS.checked?`<button class="peek" data-a="lpeek" data-id="${c.id}">Revoir la fiche</button>`:''}`;
+  if(!st.ex) foot=`<div class="l-foot"><div class="l-foot-in"><button class="btn primary big block" data-a="lnext">Continuer</button></div></div>`;
+  else if(!LS.checked) foot=`<div class="l-foot"><div class="l-foot-in"><button class="btn primary big block" data-a="lcheck" ${ready(st)?'':'disabled'}>Vérifier</button></div></div>`;
+  else { const k=LS.checked; foot=`<div class="l-foot ${k.ok?'fb-ok':'fb-ko'}"><div class="l-foot-in">
+      <p class="fb-title">${k.ok? I.check+esc(k.praise) : I.x+'Pas tout à fait'}</p>
+      ${k.ok?'':`<p class="fb-ans">Bonne réponse : <b>${esc(k.ans)}</b></p>${k.requeued?'<p class="fb-ans small">Cette question reviendra à la fin.</p>':''}`}
+      <button class="btn big block ${k.ok?'ok-btn':'ko-btn'}" data-a="lnext">Continuer</button></div></div>`; }
+  LS.el.innerHTML=`<div class="lesson"><div class="l-top"><button class="icon-btn" data-a="close" aria-label="Quitter">${I.x}</button>
+    <div class="l-bar" role="progressbar" aria-valuenow="${prog}" aria-valuemin="0" aria-valuemax="100"><span style="width:${prog}%"></span></div></div>
+    <div class="l-body">${body}</div>${foot}</div>`;
+}
+function lcheck(){
+  const st=LS.steps[LS.i]; if(!st.ex || LS.checked || !ready(st)) return;
+  let ok=false;
+  if(st.type==='qcm') ok=!!st.opts[LS.sel].correct;
+  else if(st.type==='tiles'){ const chosen=[...LS.sel].map(i=>st.opts[i]); ok= chosen.length===st.correct.size && chosen.every(n=>st.correct.has(n)); }
+  else ok=st.items.every((it,k)=>it.fixed || LS.sel[k]===it.q);
+  if(!st.tries){ LS.nEx++; if(ok) LS.nOk++; LS.first[st.id]=(LS.first[st.id]??true) && ok; }
+  let requeued=false;
+  if(!ok && (st.tries||0)<2){
+    const again={...st, tries:(st.tries||0)+1};
+    if(st.opts) again.opts=shuffle(st.opts);
+    if(st.items) again.items=st.items.map(it=>it.opts?{...it,opts:shuffle(it.opts)}:it);
+    LS.steps.push(again); requeued=true;
+  }
+  LS.checked={ok, ans:st.answer, praise:pick(PRAISE), requeued};
+  sound(ok?'ok':'ko'); if(!ok && navigator.vibrate) navigator.vibrate(80);
+  drawLesson();
+}
+function lnext(){
+  const st=LS.steps[LS.i]; if(st.ex && !LS.checked) return;
+  LS.i++; LS.sel=null; LS.checked=null;
+  if(LS.i>=LS.steps.length) return finishLesson();
+  drawLesson(); LS.el.scrollTop=0;
+}
+function finishLesson(){
+  const L=LS, acc= L.nEx? Math.round(L.nOk/L.nEx*100) : 100;
+  let xp=0, title='', msg='', retry='', icon=I.trophy;
+  if(L.mode==='learn'){
+    const id=L.ids[0], c=byId(id), perfect=L.nOk===L.nEx;
+    S.learn.lessons[id]={at:Date.now()};
+    grade(id, perfect?2:1);
+    xp=10+(perfect?5:0); icon=glassIcon(c.glass);
+    title= perfect?'Sans faute !':'Leçon terminée';
+    msg=`Le ${c.name} rejoint ta révision espacée : il reviendra demain pour bien s’ancrer.`;
+  } else if(L.mode==='review'){
+    L.ids.forEach(id=>{ if(L.first[id]!==undefined) grade(id, L.first[id]?2:0); });
+    xp=L.nOk+5; title='Révision terminée';
+    msg= acc>=80?'Tes specs tiennent bon.':'Les cocktails ratés reviendront plus vite.';
+  } else {
+    const passed=acc>=80;
+    L.ids.forEach(id=>{ if(L.first[id]!==undefined) grade(id, L.first[id]?2:1); });
+    if(passed){
+      if(L.mode==='test') L.ids.forEach(id=>{ if(!S.learn.lessons[id]) S.learn.lessons[id]={at:Date.now(), test:true}; });
+      const prev=S.learn.chapters[L.meta.chId];
+      S.learn.chapters[L.meta.chId]={score:Math.max(acc, prev?prev.score:0), at:Date.now()};
+      xp=20+(acc===100?10:0); title='Chapitre validé'; msg='Le chapitre suivant est débloqué.';
+    } else {
+      xp=5; title='Pas encore validé';
+      msg=`Il faut 80 % de bonnes réponses du premier coup, tu as ${acc} %. ${L.mode==='test'?'Passe par les leçons de ce chapitre, puis retente.':'Refais les leçons qui coincent, puis retente.'}`;
+      retry=`<button class="btn big block" data-a="lretry">Réessayer</button>`;
+    }
+  }
+  addXP(xp); save(); sound('end'); WANT_SCROLL=true; L.finished=true;
+  L.el.innerHTML=`<div class="lesson"><div class="l-body end"><div class="end-icon">${icon}</div><h2 class="end-title">${title}</h2><p class="muted">${esc(msg)}</p>
+    <div class="end-stats"><div class="stat"><b class="num">+${xp}</b><span>XP</span></div><div class="stat"><b class="num">${acc} %</b><span>du premier coup</span></div><div class="stat"><b class="num">${streak()}</b><span>jours de série</span></div></div></div>
+    <div class="l-foot"><div class="l-foot-in">${retry}<button class="btn primary big block" data-a="close">Continuer</button></div></div></div>`;
+}
+function peek(id){
+  const c=byId(id);
+  openLayer('sheet', el=>{ el.innerHTML=`<div class="sheet-in"><div class="sheet-head"><button class="icon-btn" data-a="close" aria-label="Fermer">${I.x}</button><span class="t">Fiche du ${esc(c.name)}</span><span style="width:44px"></span></div>
+    <div class="sheet-body"><div class="card">${specHTML(c)}</div>${factsHTML(c)}<button class="btn primary big block" data-a="close" style="margin-top:20px">Retour à l’exercice</button></div></div>`; });
+}
+
+/* =========================================================
    11. Export / import
    ========================================================= */
 async function exportData(){
-  const data={app:'entraineur-barman', v:1, exportedAt:new Date().toISOString(), cocktails:S.cocktails, progress:S.progress, days:S.days, newDay:S.newDay, settings:S.settings};
+  const data={app:'entraineur-barman', v:1, exportedAt:new Date().toISOString(), cocktails:S.cocktails, progress:S.progress, days:S.days, newDay:S.newDay, settings:S.settings, learn:S.learn, xp:S.xp};
   const name=`entraineur-barman-${dkey()}.json`;
   const blob=new Blob([JSON.stringify(data)],{type:'application/json'});
   try{
@@ -1096,6 +1495,14 @@ function mergeData(inc){
   });
   S.days=[...new Set([...S.days, ...(inc.days||[])])].sort();
   if(inc.settings && (inc.settings.updatedAt||0)>(S.settings.updatedAt||0)) S.settings=Object.assign({},DEFAULT_SETTINGS,inc.settings);
+  if(inc.learn){
+    Object.entries(inc.learn.lessons||{}).forEach(([id,v])=>{ if(!S.learn.lessons[id]) S.learn.lessons[id]=v; });
+    Object.entries(inc.learn.chapters||{}).forEach(([id,v])=>{ const cur=S.learn.chapters[id]; if(!cur || (v.score||0)>(cur.score||0)) S.learn.chapters[id]=v; });
+  }
+  if(inc.xp){
+    Object.entries(inc.xp.byDay||{}).forEach(([d,n])=>{ S.xp.byDay[d]=Math.max(S.xp.byDay[d]||0, n); });
+    S.xp.total=Math.max(S.xp.total, inc.xp.total||0, Object.values(S.xp.byDay).reduce((a,b)=>a+b,0));
+  }
   save();
   return {added, updated, prog};
 }
@@ -1112,12 +1519,26 @@ $('#importFile').addEventListener('change', async e=>{
    12. Actions
    ========================================================= */
 function setSetting(k,v){
-  const num=['timer','len','newPerDay']; S.settings[k]= num.includes(k)? Number(v) : v;
+  const num=['timer','len','newPerDay','dailyGoal'], bool=['sound','unlockAll']; S.settings[k]= bool.includes(k)? String(v)==='1' : num.includes(k)? Number(v) : v;
   S.settings.updatedAt=Date.now(); save();
 }
 const A = {
-  tab:b=>setTab(b.dataset.tab),
-  close:()=>closeTop(),
+  tab:b=>{ if(layers.length){ while(layers.length){ const L=layers.pop(); L.onClose&&L.onClose(); L.el.remove(); } document.body.classList.remove('locked'); } setTab(b.dataset.tab); },
+  close:()=>{ const top=layers[layers.length-1];
+    if(LS && top && top.el===LS.el && !LS.finished && LS.i>2 && !confirm('Quitter ? Ta progression dans cette leçon sera perdue.')) return;
+    closeTop(); },
+  node:b=>{ const st=b.dataset.st, id=b.dataset.id;
+    if(st==='done') openNodeSheet(id); else if(st==='open') startLesson('learn',[id]); else toast('Termine d’abord la leçon précédente'); },
+  chReview:b=>{ const ch=chapters()[+b.dataset.ch]; if(b.dataset.st!=='open'){ toast('Termine les leçons du chapitre pour débloquer sa révision'); return; } startLesson('chapter', ch.ids, {chId:ch.id}); },
+  chTest:b=>{ const ch=chapters()[+b.dataset.ch]; if(!confirm(`Test du chapitre « ${ch.title} » : si tu connais déjà ces cocktails, 80 % de bonnes réponses débloquent le chapitre. Lancer le test ?`)) return; startLesson('test', ch.ids, {chId:ch.id}); },
+  learnOne:b=>startLesson('learn',[b.dataset.id],{replace:b.dataset.replace==='1'}),
+  lsel:b=>{ if(!LS||LS.checked) return; LS.sel=+b.dataset.i; drawLesson(); },
+  ltile:b=>{ if(!LS||LS.checked) return; LS.sel=LS.sel||new Set(); const i=+b.dataset.i; LS.sel.has(i)?LS.sel.delete(i):LS.sel.add(i); drawLesson(); },
+  ldose:b=>{ if(!LS||LS.checked) return; LS.sel=LS.sel||{}; LS.sel[+b.dataset.r]=+b.dataset.v; drawLesson(); },
+  lcheck:()=>lcheck(),
+  lnext:()=>lnext(),
+  lpeek:b=>peek(b.dataset.id),
+  lretry:()=>{ const L=LS; startLesson(L.mode, L.ids, {...L.meta, replace:true}); },
   sel:b=>{ S.sel={k:b.dataset.k, fam:S.sel.fam}; if(S.sel.k==='famille' && !S.sel.fam) S.sel.fam=(live()[0]||{}).fam; save(); renderTab(); },
   rf:b=>{ RF.k=b.dataset.k; document.querySelectorAll('[data-a="rf"]').forEach(x=>x.setAttribute('aria-pressed',x===b)); drawList(); },
   open:b=>openDetail(b.dataset.id),
@@ -1135,9 +1556,9 @@ const A = {
   ingAdd:b=>{ const el=b.closest('.layer'); $('#ings',el).insertAdjacentHTML('beforeend', el._row({n:'',q:0,u:'ml'})); const rows=el.querySelectorAll('.in-n'); rows[rows.length-1].focus(); },
   ingDel:b=>{ const r=b.closest('.ing-edit'); if(r.parentElement.children.length>1) r.remove(); else r.querySelectorAll('input').forEach(i=>i.value=''); },
   saveEdit:b=>saveEdit(b.closest('.layer')),
-  startReview:()=>startSession('review', reviewQueue()),
+  startReview:()=>startLesson('review', reviewQueue()),
   startFlash:()=>startSession('flash', shuffle(pool().map(c=>c.id))),
-  quizSetup:()=>openQuizSetup(null),
+  quizSetup:()=>{ if(!pool().some(c=>lessonDone(c.id))){ toast('Apprends d’abord quelques cocktails dans le Parcours'); return; } openQuizSetup(null); },
   quizRework:()=>openQuizSetup(live().filter(c=>toRework(c.id)).map(c=>c.id)),
   qt:b=>{ const el=b.closest('.layer'), st=el._st, k=b.dataset.k; st.types = st.types.includes(k)? st.types.filter(x=>x!==k) : [...st.types,k]; el._draw(); },
   qf:b=>{ const el=b.closest('.layer'); el._st.format=b.dataset.v; el._draw(); },
@@ -1154,7 +1575,7 @@ const A = {
   export:()=>exportData(),
   import:()=>$('#importFile').click(),
   restore:()=>{ let n=0; S.cocktails.forEach(c=>{ if(c.deleted && SEED.some(s=>s.id===c.id)){ c.deleted=false; c.updatedAt=Date.now(); n++; } }); save(); renderTab(); toast(plural(n,'recette restaurée','recettes restaurées')); },
-  resetProgress:()=>{ if(!confirm('Effacer toute ta progression ? Les recettes restent.')) return; S.progress={}; S.days=[]; S.newDay={d:'',n:0}; save(); renderTab(); toast('Progression remise à zéro'); },
+  resetProgress:()=>{ if(!confirm('Effacer toute ta progression ? Les recettes restent.')) return; S.progress={}; S.days=[]; S.newDay={d:'',n:0}; S.learn={lessons:{},chapters:{}}; S.xp={total:0,byDay:{}}; save(); renderTab(); toast('Progression remise à zéro'); },
   wipe:()=>{ if(!confirm('Tout effacer sur cet appareil ? Cette action est définitive.')) return; localStorage.removeItem(KEY); S=load(); save(); renderTab(); toast('Données effacées'); }
 };
 document.addEventListener('click', e=>{
@@ -1167,8 +1588,14 @@ document.addEventListener('change', e=>{
   if(e.target.id==='sEnd'){ setSetting('schoolEnd', e.target.value); }
 });
 document.addEventListener('keydown', e=>{
-  if(e.key==='Escape' && layers.length){ closeTop(); return; }
+  if(e.key==='Escape' && layers.length){ A.close(); return; }
   if(e.target.matches('input,textarea,select')) return;
+  if(LS && !LS.finished && layers.length && layers[layers.length-1].el===LS.el){
+    const st=LS.steps[LS.i];
+    if(e.key==='Enter'){ e.preventDefault(); (!st.ex || LS.checked) ? lnext() : lcheck(); return; }
+    if(st.ex && !LS.checked && st.type==='qcm' && /^[1-9]$/.test(e.key) && st.opts[+e.key-1]){ LS.sel=+e.key-1; drawLesson(); }
+    return;
+  }
   if((e.key==='Enter'||e.key===' ') && e.target.matches('[role="button"][data-a]')){ e.preventDefault(); e.target.click(); return; }
   if(!SES) return;
   if(SES.kind==='flash'){
