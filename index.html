@@ -325,6 +325,8 @@ textarea{min-height:84px;resize:vertical}
 .tile.dose{min-width:74px;padding:8px 12px;font-variant-numeric:tabular-nums}
 .disc-hero{text-align:center;padding:16px 0 6px}
 .disc-hero svg{width:96px;height:96px;color:var(--brass)}
+.disc-photo,.detail-photo{display:block;margin:0 auto 10px;max-width:70%;max-height:240px;object-fit:contain;border-radius:14px;background:#fff}
+.detail-photo{max-height:200px;margin-bottom:14px}
 .disc-name{font-size:40px;margin:8px 0 4px}
 .tip{margin-top:16px;padding:12px 14px;border-radius:var(--r-m);background:var(--brass-soft);font-size:15px}
 .peek{background:none;border:0;color:var(--brass);font-weight:700;padding:14px 0 0;font-size:15px;text-decoration:underline;text-underline-offset:3px}
@@ -354,129 +356,50 @@ textarea{min-height:84px;resize:vertical}
 /* =========================================================
    1. Référentiels
    ========================================================= */
-const APP_VERSION = '2.0.0';
+const APP_VERSION = '3.0.0';
 const KEY = 'entraineur-barman-v1';
 const DAY = 864e5;
 
-const CATS = {I:'IBA · Inoubliables', C:'IBA · Classiques contemporains', N:'IBA · Nouvelle ère', E:'Spec de l’école', P:'Recette perso'};
-const FAMILIES = ['Sour','Spirit-forward','Highball','Fizz & Collins','Tiki & tropical','Pétillant & vin','Crémeux & flip','Julep & smash','Duo & trio','Épicé & savoureux','Chaud'];
-const GLASSES = ['Verre à cocktail','Coupe','Old fashioned','Highball','Flûte','Verre à vin','Mug en cuivre','Verre à Irish coffee','Timbale à julep','Verre hurricane','Verre à margarita','Tumbler'];
+const CATS = {E:'Spec de l’école', P:'Recette perso'};
+const FAMILIES = ['Rocks','Sour','Spirit-forward','Highball','Fizz & Collins','Tiki & tropical','Pétillant & vin','Crémeux & flip','Julep & smash','Duo & trio','Épicé & savoureux','Chaud'];
+const GLASSES = ['Highball','Rocks','Martini','Coupe','Flute','Wine','Hurricane','Copper Mug','Shot'];
 const T = {SH:'Shaker', VM:'Verre à mélange', CO:'Construit au verre', PI:'Pilé puis construit', BL:'Blender', DS:'Dry shake puis shaker', SA:'Shaker puis allongé', RO:'Roulé (throwing)'};
-const TECHS = Object.values(T);
+const TECHS = ['Build','Build & Sink','Shake & Strain','Stir & Strain','Blend','Muddle & Build','Build & Float','Throw'];
 const G = {N:'Sans glace (verre rafraîchi)', GL:'Glaçons', PI:'Glace pilée', GG:'Gros glaçon', CH:'Servi chaud'};
-const ICES = Object.values(G);
+const ICES = ['Cubed','Crushed','Block','None'];
+/* Garnitures de remplacement pour les choix multiples */
+const GARNISHES = ['Lime Wedge','Lemon Wedge','Lemon Zest','Orange Zest','Orange Slice','Cherry','Mint Sprig'];
+const isNone = g => !g || /^(aucune|none)$/i.test(String(g).trim());
 /* Unités hors liquides. q = 0 → le libellé s’affiche seul. */
-const UNITS = ['trait','goutte','cuillère à bar','cuil. à café','pincée','cube','brin','feuille','tranche','pièce','complément','un trait','quelques gouttes'];
+const UNITS = ['Fill','trait','goutte','cuillère à bar','cuil. à café','pincée','cube','brin','feuille','tranche','pièce','complément','un trait','quelques gouttes'];
 const PLURAL = {'trait':'traits','goutte':'gouttes','cuillère à bar':'cuillères à bar','pincée':'pincées','cube':'cubes','brin':'brins','feuille':'feuilles','tranche':'tranches','pièce':'pièces'};
 const QTYPES = {spec:'Recette complète', dose:'Doses', verre:'Verre', technique:'Technique', garniture:'Garniture'};
 
 /* =========================================================
-   2. Recettes IBA (doses en ml, comme sur le site IBA)
+   2. Recettes de l’école (EBS, livre p. 22 / Cocktails), doses en ml
    ========================================================= */
-const R = (id,name,cat,fam,glass,tech,ice,garnish,ing,note,ess) => ({id:'iba-'+id,name,cat,fam,glass,tech,ice,garnish,
-  ing:ing.map(([n,q,u])=>({n,q,u:u||'ml'})),note,essential:!!ess});
+const R = (id,name,fam,glass,tech,ice,garnish,ing) => ({id:'ebs-'+id,name,cat:'E',fam,glass,tech,ice,garnish,
+  ing:ing.map(([n,q,u])=>({n,q,u:u||'ml'})),note:'',essential:true,img:'img/'+id+'.jpg'});
 const SEED = [
-R('negroni','Negroni','I','Spirit-forward','Old fashioned',T.CO,G.GL,'Demi-tranche d’orange',[['Gin',30],['Campari',30],['Vermouth rouge',30]],'Florence, vers 1919 : le comte Camillo Negroni aurait demandé qu’on remplace le soda de son Americano par du gin.',1),
-R('old-fashioned','Old Fashioned','I','Spirit-forward','Old fashioned',T.CO,G.GL,'Zeste d’orange et cerise',[['Bourbon ou rye',45],['Sucre',1,'cube'],['Angostura',2,'trait'],['Eau plate',2,'trait']],'L’un des plus anciens cocktails : à la fin du XIXe siècle, on commandait son whisky cocktail « à l’ancienne », sans les liqueurs à la mode.',1),
-R('daiquiri','Daiquiri','C','Sour','Verre à cocktail',T.SH,G.N,'Aucune',[['Rhum blanc',60],['Jus de citron vert',20],['Sirop de sucre',10]],'Né à Cuba vers 1900, du nom d’une plage et d’une mine près de Santiago. Le Floridita de La Havane l’a rendu célèbre.',1),
-R('margarita','Margarita','C','Sour','Verre à margarita',T.SH,G.N,'Demi-rebord de sel',[['Tequila',50],['Triple sec',20],['Jus de citron vert',15]],'Origine disputée entre plusieurs bars mexicains et américains des années 1930-1940. Le demi-rebord de sel laisse le choix au client.',1),
-R('mojito','Mojito','C','Julep & smash','Highball',T.PI,G.PI,'Brin de menthe et tranche de citron vert',[['Rhum blanc',45],['Jus de citron vert',20],['Menthe',6,'brin'],['Sucre blanc de canne',2,'cuil. à café'],['Eau gazeuse',0,'complément']],'Héritier du « Draque » cubain. On presse la menthe doucement pour libérer l’arôme sans l’amertume des feuilles broyées.',1),
-R('dry-martini','Dry Martini','I','Spirit-forward','Verre à cocktail',T.VM,G.N,'Zeste de citron ou olive',[['Gin',60],['Vermouth dry',10]],'Descendant du Martinez, il est devenu de plus en plus sec au fil du XXe siècle.',1),
-R('manhattan','Manhattan','I','Spirit-forward','Verre à cocktail',T.VM,G.N,'Cerise au marasquin',[['Rye whiskey',50],['Vermouth rouge',20],['Angostura',1,'trait']],'New York, années 1870-1880. La légende le place au Manhattan Club.',1),
-R('whiskey-sour','Whiskey Sour','I','Sour','Old fashioned',T.SH,G.GL,'Demi-tranche d’orange et cerise',[['Bourbon',45],['Jus de citron jaune',25],['Sirop de sucre',20],['Blanc d’œuf (facultatif)',20]],'Le sour type : alcool, acide, sucre. Imprimé dès 1862 dans le guide de Jerry Thomas.',1),
-R('moscow-mule','Moscow Mule','C','Highball','Mug en cuivre',T.CO,G.GL,'Tranche de citron vert',[['Vodka',45],['Ginger beer',120],['Jus de citron vert',10]],'Los Angeles, 1941 : un coup marketing pour vendre de la vodka et de la ginger beer. Le mug en cuivre fait partie de l’histoire.',1),
-R('spritz','Spritz','N','Pétillant & vin','Verre à vin',T.CO,G.GL,'Tranche d’orange',[['Prosecco',90],['Aperol',60],['Eau gazeuse',0,'un trait']],'Vénétie : les soldats autrichiens allongeaient le vin local avec de l’eau gazeuse. Repère : 3 - 2 - 1.',1),
-R('cosmopolitan','Cosmopolitan','C','Sour','Verre à cocktail',T.SH,G.N,'Zeste de citron',[['Vodka citron',40],['Cointreau',15],['Jus de citron vert',15],['Jus de canneberge',30]],'Star des années 1990, popularisé par la série Sex and the City.',1),
-R('espresso-martini','Espresso Martini','N','Duo & trio','Verre à cocktail',T.SH,G.N,'3 grains de café',[['Vodka',50],['Liqueur de café',30],['Sirop de sucre',10],['Espresso serré',30]],'Créé par Dick Bradsell à Londres dans les années 1980. On secoue fort pour obtenir la mousse.',1),
-R('caipirinha','Caipirinha','C','Sour','Old fashioned',T.PI,G.PI,'Aucune',[['Cachaça',60],['Citron vert (4 quartiers)',0.5,'pièce'],['Sucre blanc de canne',4,'cuil. à café']],'Cocktail national du Brésil. On pile le citron vert avec le sucre directement dans le verre.',1),
-R('cuba-libre','Cuba Libre','C','Highball','Highball',T.CO,G.GL,'Quartier de citron vert',[['Rhum blanc',50],['Cola',120],['Jus de citron vert',10]],'La Havane, vers 1900, après la guerre hispano-américaine : « Por Cuba libre ! »',1),
-R('mai-tai','Mai Tai','C','Tiki & tropical','Old fashioned',T.SH,G.PI,'Brin de menthe et ananas',[['Rhum ambré jamaïcain',30],['Rhum de Martinique',30],['Curaçao orange',15],['Sirop d’orgeat',15],['Jus de citron vert',30],['Sirop de sucre',7.5]],'Trader Vic, Oakland, 1944. « Maita’i » veut dire « excellent » en tahitien.',1),
-R('pina-colada','Piña Colada','C','Tiki & tropical','Verre hurricane',T.BL,G.PI,'Quartier d’ananas et cerise',[['Rhum blanc',50],['Crème de coco',30],['Jus d’ananas',50]],'Porto Rico, années 1950. C’est la boisson officielle de l’île depuis 1978.',1),
-R('bloody-mary','Bloody Mary','C','Épicé & savoureux','Highball',T.RO,G.GL,'Branche de céleri et quartier de citron',[['Vodka',45],['Jus de tomate',90],['Jus de citron jaune',15],['Sauce Worcestershire',2,'trait'],['Tabasco',2,'goutte'],['Sel de céleri et poivre',1,'pincée']],'Attribué à Fernand Petiot, au Harry’s New York Bar de Paris, dans les années 1920.',1),
-R('sidecar','Sidecar','I','Sour','Verre à cocktail',T.SH,G.N,'Aucune (rebord sucré en option)',[['Cognac',50],['Triple sec',20],['Jus de citron jaune',20]],'Paris ou Londres, autour de la fin de la Première Guerre mondiale. Cousin direct du Brandy Crusta.',1),
-R('french-75','French 75','C','Pétillant & vin','Flûte',T.SA,G.N,'Zeste de citron (facultatif)',[['Gin',30],['Jus de citron jaune',15],['Sirop de sucre',15],['Champagne',60]],'Nommé d’après le canon de 75 mm français de la Grande Guerre, pour son effet « coup de canon ».',1),
-R('americano','Americano','I','Highball','Old fashioned',T.CO,G.GL,'Demi-tranche d’orange et zeste de citron',[['Campari',30],['Vermouth rouge',30],['Eau gazeuse',0,'un trait']],'Ancêtre du Negroni. Son nom viendrait des touristes américains qui l’adoraient en Italie.',1),
-R('boulevardier','Boulevardier','I','Spirit-forward','Verre à cocktail',T.VM,G.N,'Zeste d’orange',[['Bourbon ou rye',45],['Campari',30],['Vermouth rouge',30]],'Paris, années 1920 : créé pour Erskine Gwynne, éditeur du magazine « The Boulevardier ». Le Negroni au whisky.',1),
-R('john-collins','John Collins','I','Fizz & Collins','Highball',T.CO,G.GL,'Tranche de citron et cerise',[['Gin',45],['Jus de citron jaune',30],['Sirop de sucre',15],['Eau gazeuse',60]],'Londres, XIXe siècle. Le Collins est un sour allongé au soda, servi long sur glace.',1),
-R('gin-fizz','Gin Fizz','I','Fizz & Collins','Highball',T.SA,G.GL,'Tranche de citron',[['Gin',45],['Jus de citron jaune',30],['Sirop de sucre',10],['Eau gazeuse',80]],'Le fizz est secoué puis allongé au soda : plus court et plus vif que le Collins.',1),
-R('aviation','Aviation','I','Sour','Verre à cocktail',T.SH,G.N,'Cerise au marasquin (facultatif)',[['Gin',45],['Marasquin',15],['Jus de citron jaune',15],['Crème de violette',1,'cuillère à bar']],'Hugo Ensslin, New York, 1916. La violette lui donne sa teinte de ciel.',1),
-R('last-word','Last Word','I','Sour','Verre à cocktail',T.SH,G.N,'Aucune',[['Gin',22.5],['Chartreuse verte',22.5],['Marasquin',22.5],['Jus de citron vert',22.5]],'Detroit Athletic Club, pendant la Prohibition. Redécouvert à Seattle au début des années 2000. Quatre parts égales.',1),
-R('paloma','Paloma','N','Highball','Highball',T.CO,G.GL,'Tranche de citron vert',[['Tequila',50],['Jus de citron vert',5],['Sel',1,'pincée'],['Soda pamplemousse rose',100]],'Très populaire au Mexique, souvent plus que la Margarita.',1),
-R('tommys-margarita','Tommy’s Margarita','N','Sour','Old fashioned',T.SH,G.GL,'Quartier de citron vert',[['Tequila 100 % agave',60],['Jus de citron vert',30],['Sirop d’agave',15]],'Julio Bermejo, Tommy’s Mexican Restaurant, San Francisco, années 1990. L’agave remplace le triple sec.',1),
-R('penicillin','Penicillin','N','Sour','Old fashioned',T.SH,G.GL,'Gingembre confit',[['Blended scotch',60],['Jus de citron jaune',22.5],['Sirop de miel',22.5],['Gingembre frais',3,'tranche'],['Whisky tourbé d’Islay (en float)',7.5]],'Sam Ross, Milk & Honey, New York, 2005. Le gingembre est pilé dans le shaker, le whisky tourbé versé en surface.',1),
-R('mint-julep','Mint Julep','C','Julep & smash','Timbale à julep',T.PI,G.PI,'Brin de menthe',[['Bourbon',60],['Menthe',4,'brin'],['Sucre',1,'cube'],['Eau plate',2,'cuil. à café']],'Boisson officielle du Kentucky Derby depuis près d’un siècle.',1),
-R('pisco-sour','Pisco Sour','C','Sour','Coupe',T.DS,G.N,'Gouttes d’Angostura ou d’amargo sur la mousse',[['Pisco',60],['Jus de citron jaune',30],['Sirop de sucre',20],['Blanc d’œuf',1,'pièce']],'Lima, années 1920. Le Pérou et le Chili se disputent le pisco.',1),
-R('clover-club','Clover Club','I','Sour','Verre à cocktail',T.DS,G.N,'Framboises',[['Gin',45],['Sirop de framboise',15],['Jus de citron jaune',15],['Blanc d’œuf',0,'quelques gouttes']],'Du nom d’un club de Philadelphie, avant la Prohibition.',1),
-R('white-lady','White Lady','I','Sour','Verre à cocktail',T.SH,G.N,'Aucune',[['Gin',40],['Triple sec',30],['Jus de citron jaune',20]],'Harry MacElhone en a fait une version au gin, popularisée à l’American Bar du Savoy.'),
-R('bellini','Bellini','C','Pétillant & vin','Flûte',T.CO,G.N,'Aucune',[['Prosecco',100],['Purée de pêche blanche',50]],'Giuseppe Cipriani, Harry’s Bar de Venise, 1948. Nommé d’après le peintre Giovanni Bellini.'),
-R('mimosa','Mimosa','C','Pétillant & vin','Flûte',T.CO,G.N,'Zeste d’orange (facultatif)',[['Champagne',75],['Jus d’orange',75]],'Paris, années 1920. Le classique des brunchs.'),
-R('kir','Kir','C','Pétillant & vin','Verre à vin',T.CO,G.N,'Aucune',[['Vin blanc sec (bourgogne aligoté)',90],['Crème de cassis',10]],'Du nom du chanoine Félix Kir, maire de Dijon, qui le servait aux réceptions. Au champagne, c’est un Kir royal.'),
-R('black-russian','Black Russian','C','Duo & trio','Old fashioned',T.CO,G.GL,'Aucune',[['Vodka',50],['Liqueur de café',20]],'Gustave Tops, Bruxelles, 1949. Avec de la crème en surface, il devient le White Russian.'),
-R('irish-coffee','Irish Coffee','C','Chaud','Verre à Irish coffee',T.CO,G.CH,'Aucune',[['Irish whiskey',50],['Café chaud',120],['Sucre roux',1,'cuil. à café'],['Crème légèrement fouettée (en float)',50]],'Joe Sheridan, Foynes (Irlande), années 1940, pour réchauffer des passagers transatlantiques.'),
-R('long-island','Long Island Iced Tea','C','Highball','Highball',T.CO,G.GL,'Tranche de citron',[['Vodka',15],['Tequila',15],['Rhum blanc',15],['Gin',15],['Cointreau',15],['Jus de citron jaune',25],['Sirop de sucre',30],['Cola',0,'un trait']],'Pas une goutte de thé : c’est le cola qui lui donne sa couleur.'),
-R('tequila-sunrise','Tequila Sunrise','C','Highball','Highball',T.CO,G.GL,'Demi-tranche d’orange ou cerise',[['Tequila',45],['Jus d’orange',90],['Grenadine',15]],'On verse la grenadine en dernier : elle tombe au fond et dessine le lever de soleil.'),
-R('sex-on-the-beach','Sex on the Beach','C','Highball','Highball',T.CO,G.GL,'Demi-tranche d’orange',[['Vodka',40],['Liqueur de pêche',20],['Jus d’orange',40],['Jus de canneberge',40]],'Star des années 1980.'),
-R('sea-breeze','Sea Breeze','C','Highball','Highball',T.CO,G.GL,'Quartier de citron vert',[['Vodka',40],['Jus de canneberge',120],['Jus de pamplemousse',30]],'Highball à la canneberge, très en vogue dans les années 1980.'),
-R('dark-n-stormy','Dark ’n’ Stormy','N','Highball','Highball',T.CO,G.GL,'Quartier de citron vert',[['Rhum brun (Gosling’s)',60],['Ginger beer',100]],'Bermudes. Le nom est une marque déposée par Gosling’s.'),
-R('bramble','Bramble','N','Sour','Old fashioned',T.CO,G.PI,'Mûres et tranche de citron',[['Gin',40],['Jus de citron jaune',15],['Sirop de sucre',10],['Crème de mûre',15]],'Dick Bradsell, Londres, 1984. La crème de mûre se verse en filet sur la glace pilée.'),
-R('paper-plane','Paper Plane','N','Sour','Verre à cocktail',T.SH,G.N,'Aucune',[['Bourbon',30],['Amaro Nonino',30],['Aperol',30],['Jus de citron jaune',30]],'Sam Ross, 2008. Quatre parts égales, facile à retenir.'),
-R('corpse-reviver-2','Corpse Reviver #2','N','Sour','Verre à cocktail',T.SH,G.N,'Zeste d’orange',[['Gin',30],['Cointreau',30],['Lillet blanc',30],['Jus de citron jaune',30],['Absinthe',1,'trait']],'Un « réveille-mort » contre la gueule de bois, publié dans le Savoy Cocktail Book en 1930.'),
-R('vesper','Vesper','N','Spirit-forward','Verre à cocktail',T.SH,G.N,'Zeste de citron',[['Gin',45],['Vodka',15],['Lillet blanc',7.5]],'Inventé par Ian Fleming pour James Bond dans Casino Royale (1953).'),
-R('sazerac','Sazerac','I','Spirit-forward','Old fashioned',T.VM,G.N,'Zeste de citron',[['Cognac',50],['Absinthe (rinçage du verre)',10],['Sucre',1,'cube'],['Peychaud’s bitters',2,'trait']],'La Nouvelle-Orléans, XIXe siècle. Le verre est rincé à l’absinthe, puis servi sans glace.'),
-R('vieux-carre','Vieux Carré','I','Spirit-forward','Old fashioned',T.VM,G.GL,'Zeste de citron et cerise',[['Rye whiskey',30],['Cognac',30],['Vermouth rouge',30],['Bénédictine',1,'cuillère à bar'],['Peychaud’s bitters',2,'trait']],'Hotel Monteleone, La Nouvelle-Orléans, 1938. Du nom du quartier français.'),
-R('martinez','Martinez','I','Spirit-forward','Verre à cocktail',T.VM,G.N,'Zeste de citron',[['Gin',45],['Vermouth rouge',45],['Marasquin',1,'cuillère à bar'],['Bitter orange',2,'trait']],'Ancêtre du Martini, fin du XIXe siècle.'),
-R('hanky-panky','Hanky Panky','I','Spirit-forward','Verre à cocktail',T.VM,G.N,'Zeste d’orange',[['Gin',45],['Vermouth rouge',45],['Fernet-Branca',7.5]],'Ada Coleman, cheffe de bar à l’American Bar du Savoy au début du XXe siècle.'),
-R('rusty-nail','Rusty Nail','I','Duo & trio','Old fashioned',T.CO,G.GL,'Zeste de citron',[['Scotch whisky',45],['Drambuie',25]],'Popularisé dans les années 1960.'),
-R('godfather','Godfather','C','Duo & trio','Old fashioned',T.CO,G.GL,'Aucune',[['Scotch whisky',35],['Amaretto',35]],'Années 1970, nommé d’après le film Le Parrain.'),
-R('french-connection','French Connection','C','Duo & trio','Old fashioned',T.CO,G.GL,'Aucune',[['Cognac',35],['Amaretto',35]],'Le frère du Godfather, au cognac.'),
-R('stinger','Stinger','I','Duo & trio','Verre à cocktail',T.VM,G.N,'Aucune',[['Cognac',50],['Crème de menthe blanche',20]],'Digestif new-yorkais du début du XXe siècle.'),
-R('alexander','Alexander','I','Crémeux & flip','Verre à cocktail',T.SH,G.N,'Noix de muscade râpée',[['Cognac',30],['Crème de cacao brune',30],['Crème fraîche liquide',30]],'Cocktail-dessert du début du XXe siècle, parts égales.'),
-R('grasshopper','Grasshopper','C','Crémeux & flip','Verre à cocktail',T.SH,G.N,'Feuille de menthe',[['Crème de menthe verte',20],['Crème de cacao blanche',20],['Crème fraîche liquide',20]],'Associé à Tujague’s, à La Nouvelle-Orléans.'),
-R('golden-dream','Golden Dream','C','Crémeux & flip','Verre à cocktail',T.SH,G.N,'Aucune',[['Galliano',20],['Triple sec',20],['Jus d’orange',20],['Crème fraîche liquide',10]],'Floride, années 1960, à la gloire du Galliano.'),
-R('porto-flip','Porto Flip','I','Crémeux & flip','Verre à cocktail',T.SH,G.N,'Noix de muscade râpée',[['Brandy',15],['Porto rouge',45],['Jaune d’œuf',10]],'Famille des flips : un alcool ou un vin, du sucre et un œuf entier ou son jaune.'),
-R('ramos-gin-fizz','Ramos Gin Fizz','I','Fizz & Collins','Highball',T.SA,G.N,'Aucune',[['Gin',45],['Crème fraîche liquide',60],['Sirop de sucre',30],['Jus de citron vert',15],['Jus de citron jaune',15],['Blanc d’œuf',30],['Eau de fleur d’oranger',3,'trait'],['Extrait de vanille',2,'goutte'],['Eau gazeuse',0,'complément']],'Henry C. Ramos, La Nouvelle-Orléans, 1888. Ses barmen se relayaient pour le secouer très longtemps.'),
-R('singapore-sling','Singapore Sling','C','Tiki & tropical','Highball',T.SH,G.GL,'Ananas et cerise',[['Gin',30],['Liqueur de cerise',15],['Cointreau',7.5],['Bénédictine',7.5],['Grenadine',10],['Jus d’ananas',120],['Jus de citron vert',15],['Angostura',1,'trait']],'Raffles Hotel de Singapour, début du XXe siècle.'),
-R('hemingway-special','Hemingway Special','C','Sour','Verre à cocktail',T.SH,G.N,'Aucune',[['Rhum blanc',60],['Jus de pamplemousse',40],['Marasquin',15],['Jus de citron vert',15]],'Version du Daiquiri préparée pour Hemingway au Floridita, sans sucre ajouté.'),
-R('mary-pickford','Mary Pickford','I','Tiki & tropical','Verre à cocktail',T.SH,G.N,'Cerise au marasquin',[['Rhum blanc',60],['Jus d’ananas',60],['Grenadine',10],['Marasquin',1,'cuillère à bar']],'La Havane, années 1920, nommé d’après l’actrice du cinéma muet.'),
-R('between-the-sheets','Between the Sheets','I','Sour','Verre à cocktail',T.SH,G.N,'Aucune',[['Rhum blanc',30],['Cognac',30],['Triple sec',30],['Jus de citron jaune',20]],'Années 1930, un Sidecar enrichi au rhum.'),
-R('brandy-crusta','Brandy Crusta','I','Sour','Verre à vin',T.SH,G.N,'Rebord sucré et longue écorce de citron',[['Brandy',52.5],['Marasquin',7.5],['Curaçao',7.5],['Jus de citron jaune',15],['Sirop de sucre',1,'cuillère à bar'],['Angostura',2,'trait']],'Joseph Santini, La Nouvelle-Orléans, années 1850. Ancêtre du Sidecar.'),
-R('casino','Casino','I','Sour','Verre à cocktail',T.SH,G.N,'Zeste de citron et cerise',[['Old Tom gin',40],['Marasquin',10],['Bitter orange',10],['Jus de citron jaune',10]],'Classique d’avant la Prohibition.'),
-R('tuxedo','Tuxedo','I','Spirit-forward','Verre à cocktail',T.VM,G.N,'Cerise et zeste de citron',[['Old Tom gin',30],['Vermouth dry',30],['Marasquin',0.5,'cuillère à bar'],['Absinthe',0.25,'cuillère à bar'],['Bitter orange',3,'trait']],'Tuxedo Club, New York, fin du XIXe siècle.'),
-R('monkey-gland','Monkey Gland','I','Sour','Verre à cocktail',T.SH,G.N,'Aucune',[['Gin',50],['Jus d’orange',30],['Absinthe',2,'goutte'],['Grenadine',2,'goutte']],'Harry MacElhone, Paris, années 1920.'),
-R('paradise','Paradise','I','Sour','Verre à cocktail',T.SH,G.N,'Aucune',[['Gin',35],['Liqueur d’abricot',20],['Jus d’orange',15]],'Classique du Savoy Cocktail Book.'),
-R('angel-face','Angel Face','I','Duo & trio','Verre à cocktail',T.SH,G.N,'Aucune',[['Gin',30],['Liqueur d’abricot',30],['Calvados',30]],'Savoy Cocktail Book, 1930. Trois parts égales.'),
-R('champagne-cocktail','Champagne Cocktail','C','Pétillant & vin','Flûte',T.CO,G.N,'Zeste d’orange et cerise',[['Champagne',90],['Cognac',10],['Angostura',2,'trait'],['Sucre',1,'cube']],'XIXe siècle : le cube de sucre imbibé d’Angostura fait monter les bulles.'),
-R('horses-neck','Horse’s Neck','C','Highball','Highball',T.CO,G.GL,'Longue spirale de zeste de citron',[['Cognac',40],['Ginger ale',120],['Angostura (facultatif)',2,'trait']],'Fin du XIXe siècle, d’abord servi sans alcool. La longue spirale de zeste évoque le cou du cheval.'),
-R('lemon-drop','Lemon Drop Martini','C','Sour','Verre à cocktail',T.SH,G.N,'Rebord sucré et tranche de citron',[['Vodka citron',25],['Triple sec',20],['Jus de citron jaune',15]],'San Francisco, années 1970.'),
-R('russian-spring-punch','Russian Spring Punch','C','Pétillant & vin','Highball',T.SA,G.GL,'Tranche de citron et mûre',[['Vodka',25],['Jus de citron jaune',25],['Crème de cassis',15],['Sirop de sucre',10],['Champagne',0,'complément']],'Dick Bradsell, Londres, années 1980.'),
-R('southside','Southside','N','Julep & smash','Verre à cocktail',T.SH,G.N,'Brin de menthe',[['Gin',60],['Jus de citron vert',30],['Sirop de sucre',15],['Menthe',2,'brin']],'Associé aux country clubs de Long Island et aux années de la Prohibition.'),
-R('fernandito','Fernandito','N','Highball','Highball',T.CO,G.GL,'Aucune',[['Fernet-Branca',50],['Cola',0,'complément']],'Le « Fernet con coca », passion nationale en Argentine.')
+R('gin-tonic','Gin & Tonic','Highball','Highball','Build','Cubed','Lime Wedge',[['Gin',40],['Tonic',0,'Fill']]),
+R('spirit-mixer','Spirit & Mixer','Highball','Highball','Build','Cubed','Lemon / Lime wedge or None',[['Spirit',40],['Mixer',0,'Fill']]),
+R('cuba-libre','Cuba Libre','Highball','Highball','Build','Cubed','Lime wedge',[['Light Rum',40],['Fresh lime juice',10],['Coca Cola',0,'Fill']]),
+R('tequila-sunrise','Tequila Sunrise','Highball','Highball','Build & Sink','Cubed','None',[['Tequila',40],['Orange Juice',0,'Fill'],['Grenadine (Sink)',10]]),
+R('rusty-nail','Rusty Nail','Rocks','Rocks','Build','Cubed','Lemon Zest',[['Grant’s Scotch Whisky',30],['Drambuie',30]]),
+R('godfather','Godfather','Rocks','Rocks','Build','Cubed','None',[['Grant’s Scotch Whisky',30],['Amaretto',30]])
 ];
 SEED.forEach((s,i)=>{s.rank=i});
 
-/* Chapitres du parcours : 5 cocktails liés par une logique commune */
+/* Chapitres du parcours */
 const CHAPTERS = [
- ['ch01','Les sours de base','Alcool, citron, sucre : la structure qui revient partout.',['daiquiri','whiskey-sour','margarita','sidecar','white-lady']],
- ['ch02','Les long drinks du comptoir','Les commandes que tu serviras le plus, souvent construites au verre.',['mojito','cuba-libre','moscow-mule','caipirinha','bloody-mary']],
- ['ch03','La famille Negroni','Amers italiens et vermouth, souvent à parts égales.',['negroni','americano','boulevardier','spritz','paper-plane']],
- ['ch04','Les grands classiques mélangés','Alcool fort et vermouth au verre à mélange, sans agrumes.',['old-fashioned','manhattan','dry-martini','martinez','vesper']],
- ['ch05','Les stars modernes','Les créations récentes que tout le monde commande.',['cosmopolitan','espresso-martini','tommys-margarita','penicillin','lemon-drop']],
- ['ch06','Bulles et vin','Champagne, prosecco et vin blanc en vedette.',['french-75','bellini','mimosa','kir','champagne-cocktail']],
- ['ch07','Tiki et tropical','Rhum, fruits exotiques et sirops.',['mai-tai','pina-colada','singapore-sling','mary-pickford','hemingway-special']],
- ['ch08','Fizz, Collins et blanc d’œuf','Des sours allongés au soda ou rendus mousseux par l’œuf.',['gin-fizz','john-collins','pisco-sour','clover-club','ramos-gin-fizz']],
- ['ch09','Les highballs','Un alcool, un allongeur, beaucoup de glace.',['tequila-sunrise','sex-on-the-beach','sea-breeze','paloma','dark-n-stormy']],
- ['ch10','Sours aromatiques','Herbes, fruits rouges et liqueurs.',['mint-julep','southside','bramble','aviation','last-word']],
- ['ch11','Les duos digestifs','Deux ingrédients, souvent construits sur glace.',['black-russian','rusty-nail','godfather','french-connection','stinger']],
- ['ch12','Crème, œuf et café','Les cocktails de fin de repas.',['alexander','grasshopper','golden-dream','porto-flip','irish-coffee']],
- ['ch13','La Nouvelle-Orléans','Absinthe, bitters et cognac : les ancêtres.',['sazerac','vieux-carre','brandy-crusta','hanky-panky','corpse-reviver-2']],
- ['ch14','Les classiques du Savoy','Recettes anciennes au gin, souvent fruitées.',['casino','tuxedo','monkey-gland','paradise','angel-face']],
- ['ch15','Pour finir le service','Les derniers classiques IBA à connaître.',['between-the-sheets','horses-neck','russian-spring-punch','long-island','fernandito']]
-].map(([id,title,desc,ids])=>({id,title,desc,ids:ids.map(x=>'iba-'+x)}));
+ ['ebs01','Highball','Construits au verre sur glaçons, complétés au soft.',['gin-tonic','spirit-mixer','cuba-libre','tequila-sunrise']],
+ ['ebs02','Rocks','Deux ingrédients à parts égales, construits sur glaçons.',['rusty-nail','godfather']]
+].map(([id,title,desc,ids])=>({id,title,desc,ids:ids.map(x=>'ebs-'+x)}));
 
 /* =========================================================
    3. Stockage
    ========================================================= */
-const DEFAULT_SETTINGS = {unit:'cl', timer:20, len:10, newPerDay:5, dailyGoal:20, sound:true, unlockAll:false, format:'mix', types:['spec','dose','verre','technique','garniture'], schoolStart:'2026-11-09', schoolEnd:'2026-12-04', updatedAt:0};
+const DEFAULT_SETTINGS = {unit:'ml', timer:20, len:10, newPerDay:5, dailyGoal:20, sound:true, unlockAll:false, format:'mix', types:['spec','dose','verre','technique','garniture'], schoolStart:'2026-11-09', schoolEnd:'2026-12-04', updatedAt:0};
 const fromSeed = s => ({...JSON.parse(JSON.stringify(s)), fav:false, week:false, custom:false, edited:false, deleted:false, updatedAt:0});
 let S = load();
 
@@ -495,6 +418,15 @@ function migrate(d){
   d.newDay = d.newDay || {d:'', n:0};
   d.learn = d.learn || {}; d.learn.lessons = d.learn.lessons || {}; d.learn.chapters = d.learn.chapters || {};
   d.xp = d.xp || {total:0, byDay:{}}; d.xp.byDay = d.xp.byDay || {};
+  const old = d.cocktails.filter(c=>String(c.id).startsWith('iba-') && !c.custom).map(c=>c.id);
+  if(old.length){
+    d.settings.unit = 'ml';
+    d.cocktails = d.cocktails.filter(c=>!old.includes(c.id));
+    old.forEach(id=>{ delete d.progress[id]; delete d.learn.lessons[id]; });
+    Object.keys(d.learn.chapters).forEach(k=>{ if(/^ch\d/.test(k)) delete d.learn.chapters[k]; });
+  }
+  /* Fiches de l’école non modifiées : toujours alignées sur la version du code (photo comprise) */
+  d.cocktails.forEach(c=>{ const sd=SEED.find(x=>x.id===c.id); if(sd && !c.edited) Object.assign(c, JSON.parse(JSON.stringify(sd))); else if(sd && !c.img) c.img=sd.img; });
   const ids = new Set(d.cocktails.map(c=>c.id));
   SEED.forEach(s=>{ if(!ids.has(s.id)) d.cocktails.push(fromSeed(s)); });
   return d;
@@ -574,7 +506,7 @@ function glassKey(g){
   if(s.includes('cocktail')||s.includes('martini')) return 'martini';
   if(s.includes('highball')||s.includes('collins')) return 'highball';
   if(s.includes('flûte')||s.includes('flute')) return 'flute';
-  if(s.includes('vin')||s.includes('ballon')) return 'wine';
+  if(s.includes('vin')||s.includes('wine')||s.includes('ballon')) return 'wine';
   if(s.includes('cuivre')||s.includes('mug')) return 'mug';
   if(s.includes('irish')) return 'irish';
   if(s.includes('julep')||s.includes('timbale')) return 'julep';
@@ -831,7 +763,7 @@ function viewReglages(){
 
   <div class="section"><h2>Recettes et progression</h2>
     <div class="settings-group">
-      <div class="set-row"><span class="lbl">Restaurer les recettes IBA supprimées</span><span class="desc">${tomb? plural(tomb,'recette IBA supprimée','recettes IBA supprimées')+'. Tes fiches modifiées ne sont pas touchées.':'Aucune recette IBA supprimée.'}</span><button class="btn" data-a="restore" ${tomb?'':'disabled'}>Restaurer</button></div>
+      <div class="set-row"><span class="lbl">Restaurer les recettes de l’école supprimées</span><span class="desc">${tomb? plural(tomb,'recette supprimée','recettes supprimées')+'. Tes fiches modifiées ne sont pas touchées.':'Aucune recette IBA supprimée.'}</span><button class="btn" data-a="restore" ${tomb?'':'disabled'}>Restaurer</button></div>
       <div class="set-row"><span class="lbl">Remettre la progression à zéro</span><span class="desc">Efface les leçons, les chapitres validés, l’XP, la révision espacée et la série. Les recettes restent.</span><button class="btn danger" data-a="resetProgress">Remettre à zéro</button></div>
       <div class="set-row"><span class="lbl">Tout effacer sur cet appareil</span><span class="desc">Recettes, progression et réglages. Exporte d’abord si tu veux garder quelque chose.</span><button class="btn danger" data-a="wipe">Tout effacer</button></div>
     </div>
@@ -841,7 +773,7 @@ function viewReglages(){
     <ul class="limits">
       <li>Les données restent sur l’appareil, dans le navigateur. Le téléphone et l’ordinateur ne se synchronisent pas seuls : passe par l’export et l’import.</li>
       <li>Vider les données de Chrome ou désinstaller l’appli efface tout. Exporte régulièrement, surtout avant un changement de téléphone.</li>
-      <li>Les recettes fournies suivent les specs IBA. Vérifie-les sur iba-world.com et aligne-les sur les specs de ton école, qui font foi en examen.</li>
+      <li>Les recettes fournies viennent du livre de l’école EBS. Ajoute les suivantes au fil de la formation.</li>
       <li>Les conversions en oz sont arrondies pour rester lisibles.</li>
     </ul>
     <p class="tiny" style="margin-top:14px">Entraîneur barman ${APP_VERSION}</p>
@@ -886,7 +818,7 @@ function factsHTML(c){
     <div class="fact">${glassIcon(c.glass)}<div><div class="k">Verre</div><div class="v">${esc(c.glass)}</div></div></div>
     <div class="fact">${I.shaker}<div><div class="k">Technique</div><div class="v">${esc(c.tech)}</div></div></div>
     <div class="fact">${I.ice}<div><div class="k">Glace</div><div class="v">${esc(c.ice)}</div></div></div>
-    <div class="fact">${I.leaf}<div><div class="k">Garniture</div><div class="v">${esc(c.garnish||'Aucune')}</div></div></div>
+    <div class="fact">${I.leaf}<div><div class="k">Garniture</div><div class="v">${esc(c.garnish||'None')}</div></div></div>
   </div>`;
 }
 function openDetail(id){
@@ -897,7 +829,7 @@ function openDetail(id){
       el.innerHTML=`<div class="sheet-in">
         <div class="sheet-head"><button class="icon-btn" data-a="close" aria-label="Fermer">${I.back}</button><span class="t">Fiche technique</span><button class="icon-btn" data-a="fav" data-id="${id}" aria-label="${c.fav?'Retirer des favoris':'Ajouter aux favoris'}" style="color:var(--brass)">${c.fav?I.starFill:I.star}</button></div>
         <div class="sheet-body">
-          <h2 class="detail-name">${esc(c.name)}</h2>
+          ${c.img?`<img class="detail-photo" src="${esc(c.img)}" alt="${esc(c.name)}" onerror="this.remove()">`:''}<h2 class="detail-name">${esc(c.name)}</h2>
           <p class="detail-sub">${esc(CATS[c.cat]||c.cat||'')}${c.fam?' · '+esc(c.fam):''}${c.edited?' · modifiée':''}</p>
           <div class="card">${specHTML(c)}</div>
           ${factsHTML(c)}
@@ -907,7 +839,7 @@ function openDetail(id){
           <div class="actions">
             <button class="btn primary" data-a="learnOne" data-id="${id}">${I.repeat}${lessonDone(id)?'Refaire la leçon':'Apprendre'}</button>
             <button class="btn" data-a="edit" data-id="${id}">${I.edit}Modifier</button>
-            ${seed && c.edited?`<button class="btn ghost" data-a="revert" data-id="${id}">Revenir à la spec IBA</button>`:''}
+            ${seed && c.edited?`<button class="btn ghost" data-a="revert" data-id="${id}">Revenir à la spec de l’école</button>`:''}
             <button class="btn danger" data-a="del" data-id="${id}">${I.trash}Supprimer</button>
           </div>
         </div></div>`;
@@ -918,7 +850,7 @@ function openDetail(id){
 
 /* Formulaire */
 function openEdit(id){
-  const c = id ? JSON.parse(JSON.stringify(byId(id))) : {id:null,name:'',cat:'E',fam:'Sour',glass:'Verre à cocktail',tech:T.SH,ice:G.N,garnish:'',ing:[{n:'',q:0,u:'ml'}],note:''};
+  const c = id ? JSON.parse(JSON.stringify(byId(id))) : {id:null,name:'',cat:'E',fam:'Highball',glass:'Highball',tech:'Build',ice:'Cubed',garnish:'',ing:[{n:'',q:0,u:'ml'}],note:''};
   const u=S.settings.unit;
   const unitOpts = cur => [`<option value="ml" ${cur==='ml'?'selected':''}>${u}</option>`, ...UNITS.map(x=>`<option ${cur===x?'selected':''}>${esc(x)}</option>`)].join('');
   const rowHTML = i => `<div class="ing-edit"><input type="text" class="in-n" placeholder="Ingrédient" value="${esc(i.n)}" aria-label="Ingrédient"><input type="text" inputmode="decimal" class="in-q" placeholder="${u}" value="${i.u==='ml'?fromMl(i.q):(i.q?String(i.q).replace('.',','):'')}" aria-label="Quantité"><select class="in-u" aria-label="Unité">${unitOpts(i.u)}</select><button type="button" class="icon-btn" data-a="ingDel" aria-label="Retirer l’ingrédient">${I.x}</button></div>`;
@@ -936,7 +868,7 @@ function openEdit(id){
         <div class="row"><label class="field grow"><span>Verre</span><input type="text" id="fGlass" list="dlGlass" value="${esc(c.glass)}"></label>
         <label class="field grow"><span>Technique</span><input type="text" id="fTech" list="dlTech" value="${esc(c.tech)}"></label></div>
         <div class="row"><label class="field grow"><span>Glace</span><input type="text" id="fIce" list="dlIce" value="${esc(c.ice)}"></label>
-        <label class="field grow"><span>Garniture</span><input type="text" id="fGarn" value="${esc(c.garnish)}" placeholder="Aucune"></label></div>
+        <label class="field grow"><span>Garniture</span><input type="text" id="fGarn" value="${esc(c.garnish)}" placeholder="None"></label></div>
         <label class="field"><span>Note d’histoire ou astuce</span><textarea id="fNote">${esc(c.note)}</textarea></label>
         ${dl('dlFam',[...FAMILIES,...S.cocktails.map(x=>x.fam)])}${dl('dlGlass',[...GLASSES,...S.cocktails.map(x=>x.glass)])}${dl('dlTech',[...TECHS,...S.cocktails.map(x=>x.tech)])}${dl('dlIce',ICES)}
       </div></div>`;
@@ -953,8 +885,8 @@ function saveEdit(el){
     const q=parseFloat(raw.replace(',','.')); return {n, q:isFinite(q)?q:0, u};
   }).filter(Boolean);
   if(!ing.length){ toast('Ajoute au moins un ingrédient'); return; }
-  const data={name, cat:$('#fCat',el).value, fam:$('#fFam',el).value.trim(), glass:$('#fGlass',el).value.trim()||'Verre à cocktail',
-    tech:$('#fTech',el).value.trim()||T.SH, ice:$('#fIce',el).value.trim()||G.N, garnish:$('#fGarn',el).value.trim()||'Aucune', note:$('#fNote',el).value.trim(), ing};
+  const data={name, cat:$('#fCat',el).value, fam:$('#fFam',el).value.trim(), glass:$('#fGlass',el).value.trim()||'Highball',
+    tech:$('#fTech',el).value.trim()||'Build', ice:$('#fIce',el).value.trim()||'Cubed', garnish:$('#fGarn',el).value.trim()||'None', note:$('#fNote',el).value.trim(), ing};
   const id=el._editId;
   if(id){ const c=byId(id); Object.assign(c,data,{edited:!c.custom, updatedAt:Date.now()}); toast('Fiche enregistrée'); }
   else { S.cocktails.push({...data,id:uid(),rank:1000,essential:false,fav:false,week:false,custom:true,edited:false,deleted:false,updatedAt:Date.now()}); toast('Recette ajoutée'); }
@@ -995,7 +927,7 @@ function textOptions(correct, pool){
 }
 function applicable(c,t){
   if(t==='dose') return c.ing.some(i=>i.u==='ml'&&i.q>0);
-  if(t==='garniture') return c.garnish && !/^aucune$/i.test(c.garnish.trim());
+  if(t==='garniture') return !isNone(c.garnish);
   return true;
 }
 function buildQ(c, type, fmt){
@@ -1012,7 +944,7 @@ function buildQ(c, type, fmt){
   }
   else if(type==='verre'){ q.prompt='Dans quel verre se sert-il ?'; q.options=textOptions(c.glass,[...GLASSES,...live().map(x=>x.glass)]); q.answer=c.glass; }
   else if(type==='technique'){ q.prompt='Quelle technique ?'; q.options=textOptions(c.tech,[...TECHS,...live().map(x=>x.tech)]); q.answer=c.tech; }
-  else { q.prompt='Quelle garniture ?'; q.options=textOptions(c.garnish, live().map(x=>x.garnish).filter(g=>!/^aucune/i.test(g||''))); q.answer=c.garnish; }
+  else { q.prompt='Quelle garniture ?'; q.options=textOptions(c.garnish, [...GARNISHES,...live().map(x=>x.garnish)].filter(g=>!isNone(g))); q.answer=c.garnish; }
   return q;
 }
 
@@ -1221,7 +1153,7 @@ function viewParcours(){
     <span class="pill fire" title="Série de jours">${I.flame}<span class="num">${streak()}</span></span>
     <div class="goal grow"><div class="goal-top"><span>Objectif du jour</span><b class="num">${today} / ${goal} XP</b></div><div class="goal-bar"><span style="width:${pct}%"></span></div></div>
   </div>`;
-  if(!anyLearned) h+=`<div class="card welcome"><h2>Bienvenue au comptoir</h2><p class="muted">Chaque chapitre t’apprend 5 cocktails. Une leçon te montre la fiche, puis tu t’entraînes jusqu’à la retenir. Le chapitre se termine par une révision des 5 : réussis-la pour débloquer la suite.</p></div>`;
+  if(!anyLearned) h+=`<div class="card welcome"><h2>Bienvenue au comptoir</h2><p class="muted">Chaque chapitre t’apprend quelques cocktails. Une leçon te montre la fiche, puis tu t’entraînes jusqu’à la retenir. Le chapitre se termine par une révision de tous ses cocktails : réussis-la pour débloquer la suite.</p></div>`;
   let gi=0;
   chs.forEach((ch,k)=>{
     const un=chUnlocked(chs,k), passed=chPassed(ch), doneN=ch.ids.filter(lessonDone).length, isCur=!!cur && cur.k===k;
@@ -1246,7 +1178,7 @@ function openNodeSheet(id){
   const c=byId(id);
   openLayer('sheet', el=>{
     el.innerHTML=`<div class="sheet-in"><div class="sheet-head"><button class="icon-btn" data-a="close" aria-label="Fermer">${I.x}</button><span class="t">Leçon terminée</span><span style="width:44px"></span></div>
-    <div class="sheet-body"><div class="disc-hero">${glassIcon(c.glass)}<h2 class="disc-name">${esc(c.name)}</h2><p class="muted">Maîtrise ${mastery(id)} %. ${esc(dueLabel(id))}.</p></div>
+    <div class="sheet-body"><div class="disc-hero">${c.img?`<img class="disc-photo" src="${esc(c.img)}" alt="${esc(c.name)}" onerror="this.remove()">`:glassIcon(c.glass)}<h2 class="disc-name">${esc(c.name)}</h2><p class="muted">Maîtrise ${mastery(id)} %. ${esc(dueLabel(id))}.</p></div>
     <div class="actions" style="flex-direction:column"><button class="btn primary big block" data-a="learnOne" data-id="${id}" data-replace="1">Refaire la leçon</button><button class="btn big block" data-a="open" data-id="${id}">Voir la fiche</button></div></div></div>`;
   });
 }
@@ -1265,7 +1197,7 @@ function doseOpts(q){
 }
 function mkGlass(c){ return {ex:true,type:'qcm',grid:true,id:c.id,kind:'Le verre',title:`Dans quel verre sert-on le ${c.name} ?`,opts:textOpts(c.glass,[...GLASSES,...live().map(x=>x.glass)],true),answer:c.glass}; }
 function mkTech(c){ return {ex:true,type:'qcm',id:c.id,kind:'La technique',title:`Comment prépare-t-on le ${c.name} ?`,opts:textOpts(c.tech,[...TECHS,...live().map(x=>x.tech)]),answer:c.tech}; }
-function mkGarn(c){ return {ex:true,type:'qcm',id:c.id,kind:'La garniture',title:`Quelle garniture pour le ${c.name} ?`,opts:textOpts(c.garnish,live().map(x=>x.garnish).filter(g=>g&&!/^aucune/i.test(g))),answer:c.garnish}; }
+function mkGarn(c){ return {ex:true,type:'qcm',id:c.id,kind:'La garniture',title:`Quelle garniture pour le ${c.name} ?`,opts:textOpts(c.garnish,[...GARNISHES,...live().map(x=>x.garnish)].filter(g=>!isNone(g))),answer:c.garnish}; }
 function mkDose(c){
   const ing=pick(mlIngs(c));
   return {ex:true,type:'qcm',id:c.id,kind:'La dose',title:`${ing.n} : quelle dose dans le ${c.name} ?`,opts:doseOpts(ing.q).map(d=>({html:esc(fmtMl(d)),correct:d===ing.q})),answer:`${ing.n} ${fmtMl(ing.q)}`};
@@ -1384,7 +1316,7 @@ function exBody(st){
 function drawLesson(){
   const st=LS.steps[LS.i], c=byId(st.id), prog=Math.round(LS.i/LS.steps.length*100);
   let body, foot;
-  if(st.type==='intro') body=`<p class="l-kind">Nouveau cocktail</p><div class="disc-hero">${glassIcon(c.glass)}<h2 class="disc-name">${esc(c.name)}</h2><p class="muted">${esc(CATS[c.cat]||'')}${c.fam?', '+esc(c.fam):''}</p></div>${c.note?`<p class="note">${esc(c.note)}</p>`:''}`;
+  if(st.type==='intro') body=`<p class="l-kind">Nouveau cocktail</p><div class="disc-hero">${c.img?`<img class="disc-photo" src="${esc(c.img)}" alt="${esc(c.name)}" onerror="this.remove()">`:glassIcon(c.glass)}<h2 class="disc-name">${esc(c.name)}</h2><p class="muted">${esc(CATS[c.cat]||'')}${c.fam?', '+esc(c.fam):''}</p></div>${c.note?`<p class="note">${esc(c.note)}</p>`:''}`;
   else if(st.type==='ingr'){ const r=ratioStr(c); body=`<p class="l-kind">La recette</p><h2 class="l-title">Ce qu’il y a dans le ${esc(c.name)}</h2><div class="card">${specHTML(c)}</div>${r?`<p class="tip">Astuce : retiens le ratio <b>${r}</b>. Les barres montrent les proportions.</p>`:''}`; }
   else if(st.type==='service') body=`<p class="l-kind">Le service</p><h2 class="l-title">Comment on le sert</h2>${factsHTML(c)}<p class="tip">Lis bien tout : les exercices arrivent juste après.</p>`;
   else body=`<p class="l-kind">${esc(st.kind)}${st.tries?', on y revient':''}</p><h2 class="l-title">${esc(st.title)}</h2>${exBody(st)}${LS.mode==='learn'&&!LS.checked?`<button class="peek" data-a="lpeek" data-id="${c.id}">Revoir la fiche</button>`:''}`;
@@ -1550,8 +1482,8 @@ const A = {
   clearWeek:()=>{ if(!confirm('Retirer tous les cocktails de la semaine à l’école ?')) return; live().filter(c=>c.week).forEach(c=>{c.week=false;c.updatedAt=Date.now();}); save(); drawList(); toast('Semaine vidée'); },
   del:b=>{ const c=byId(b.dataset.id); if(!confirm(`Supprimer « ${c.name} » ?`+(c.custom?'':'\nTu pourras la restaurer depuis les réglages.'))) return;
            c.deleted=true; c.updatedAt=Date.now(); save(); toast('Fiche supprimée'); closeTop(); },
-  revert:b=>{ const c=byId(b.dataset.id), s=SEED.find(x=>x.id===c.id); if(!s||!confirm('Remplacer ta version par la spec IBA d’origine ?')) return;
-           Object.assign(c, JSON.parse(JSON.stringify(s)), {edited:false, updatedAt:Date.now()}); save(); toast('Spec IBA rétablie'); layers[layers.length-1].refresh(); },
+  revert:b=>{ const c=byId(b.dataset.id), s=SEED.find(x=>x.id===c.id); if(!s||!confirm('Remplacer ta version par la spec de l’école ?')) return;
+           Object.assign(c, JSON.parse(JSON.stringify(s)), {edited:false, updatedAt:Date.now()}); save(); toast('Spec de l’école rétablie'); layers[layers.length-1].refresh(); },
   drill:b=>startSession('quiz',[b.dataset.id,b.dataset.id,b.dataset.id],{types:['spec','dose','verre','technique','garniture'],format:'mix'}),
   ingAdd:b=>{ const el=b.closest('.layer'); $('#ings',el).insertAdjacentHTML('beforeend', el._row({n:'',q:0,u:'ml'})); const rows=el.querySelectorAll('.in-n'); rows[rows.length-1].focus(); },
   ingDel:b=>{ const r=b.closest('.ing-edit'); if(r.parentElement.children.length>1) r.remove(); else r.querySelectorAll('input').forEach(i=>i.value=''); },

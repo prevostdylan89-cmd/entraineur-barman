@@ -1,6 +1,7 @@
 /* Entraîneur barman : réseau d'abord, cache en secours hors connexion */
-const CACHE = 'entraineur-barman-v2';
-const CORE = ['./', './index.html', './manifest.json', './icon-192.png', './icon-512.png', './icon-maskable-512.png'];
+const CACHE = 'entraineur-barman-v3';
+const CORE = ['./', './index.html', './manifest.json', './icon-192.png', './icon-512.png', './icon-maskable-512.png',
+  './img/gin-tonic.jpg', './img/spirit-mixer.jpg', './img/cuba-libre.jpg', './img/tequila-sunrise.jpg', './img/rusty-nail.jpg', './img/godfather.jpg'];
 
 self.addEventListener('install', e => {
   e.waitUntil(caches.open(CACHE).then(c => c.addAll(CORE)).then(() => self.skipWaiting()));
